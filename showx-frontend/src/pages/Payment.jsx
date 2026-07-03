@@ -34,14 +34,15 @@ export default function Payment() {
 
     try {
       const mockBackendOrderData = {
-        orderId: 'order_test_SHX' + Math.floor(Math.random() * 100000),
+        orderId: 'SHX-' + Math.floor(100000 + Math.random() * 900000),
         amount: finalPayable * 100 // Convert total scale currency to base integers (paise)
       };
 
       openPaymentModal(mockBackendOrderData, (paymentResult) => {
         console.log('Payment captured verified token:', paymentResult);
         setIsPaying(false);
-        navigate('/confirmation');
+        // Safely pass the actual order ID dynamically into the routing path
+        navigate(`/confirmation/${mockBackendOrderData.orderId}`);
       });
 
     } catch (err) {

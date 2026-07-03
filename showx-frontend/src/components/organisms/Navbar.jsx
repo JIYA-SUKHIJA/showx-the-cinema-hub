@@ -1,22 +1,32 @@
 // src/components/organisms/Navbar.jsx
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, ShoppingCart, Clapperboard, User, 
   MapPin, ChevronDown, Film, Tv, Sparkles, 
-  Theater, ShieldCheck, Sun, Moon, LogOut, Ticket
+  Theater, ShieldCheck, Sun, Moon, LogOut, Ticket, Settings, HelpCircle
 } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function Navbar() {
-  const { selectedSeats } = useBooking();
+  const navigate = useNavigate();
+  const { selectedSeats, clearBookingSession } = useBooking();
   const { isDarkMode, toggleTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('Karnal');
   const [searchFocused, setSearchFocused] = useState(false);
+
+  // Dynamic Auth Mock States (Replace with custom auth hooks when available)
+  const user = {
+    name: "Jiya Sukhija",
+    email: "jiya.sukhija@cinema.com",
+    role: "admin", 
+    activeBookingsCount: 2,
+    latestBookingId: "SHX-582910"
+  };
 
   // Dynamic Placeholder Typewriter Engine
   const placeholders = [
@@ -50,6 +60,18 @@ export default function Navbar() {
     }
     return () => clearTimeout(timer);
   }, [currentText, isDeleting, placeholderIndex]);
+
+  const getUserInitials = (name) => {
+    if (!name) return "UX";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const handleLogout = () => {
+    setIsProfileOpen(false);
+    clearBookingSession();
+    sessionStorage.clear();
+    navigate('/');
+  };
 
   const cities = ['Karnal', 'Delhi NCR', 'Mumbai', 'Bengaluru', 'Chandigarh'];
   const linkBaseStyle = "flex items-center gap-1.5 transition-all duration-300 relative py-1 px-1 rounded-md text-xs font-bold tracking-wide";
@@ -161,11 +183,11 @@ export default function Navbar() {
           <div className="relative">
             <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`w-9 h-9 rounded-xl border flex items-center justify-center font-bold text-xs cursor-pointer shadow-md ${
+              className={`w-9 h-9 rounded-xl border flex items-center justify-center font-bold text-xs cursor-pointer shadow-md select-none ${
                 isDarkMode ? "bg-slate-800 border-white/10 text-slate-300" : "bg-stone-50 border-stone-200 text-stone-700"
               }`}
             >
-              <User size={15} />
+              {getUserInitials(user.name)}
             </button>
 
             <AnimatePresence>
@@ -176,50 +198,86 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 12, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 12, scale: 0.96 }}
-                    className={`absolute right-0 mt-3 w-64 border rounded-2xl p-2 shadow-2xl z-20 backdrop-blur-xl ${
+                    className={`absolute right-0 mt-3 w-64 border rounded-2xl p-2 shadow-2xl z-20 backdrop-blur-xl transition-colors duration-300 ${
                       isDarkMode ? "bg-slate-900/95 border-white/[0.08]" : "bg-white/95 border-stone-200"
                     }`}
                   >
                     <div className={`px-3 py-3 border-b flex items-center gap-3 ${isDarkMode ? "border-white/[0.05]" : "border-stone-100"}`}>
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-500 flex items-center justify-center font-black text-stone-950">JS</div>
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-500 flex items-center justify-center font-black text-stone-950 select-none shrink-0">
+                        {getUserInitials(user.name)}
+                      </div>
                       <div className="truncate">
-                        <p className={`text-sm font-black truncate ${isDarkMode ? "text-white" : "text-stone-800"}`}>Jiya Sukhija</p>
-                        <p className="text-[10px] text-slate-500 truncate">jiya.sukhija@cinema.com</p>
+                        <p className={`text-sm font-black truncate ${isDarkMode ? "text-white" : "text-stone-800"}`}>{user.name}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
                       </div>
                     </div>
 
                     <div className="p-1 space-y-0.5">
-                      <Link to="/confirmation" onClick={() => setIsProfileOpen(false)} className={`flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl text-slate-300 hover:bg-white/[0.04]`}>
+                      {/* Dynamic Booking Route Pointer */}
+                      <Link 
+                        to={`/confirmation/${user.latestBookingId}`} 
+                        onClick={() => setIsProfileOpen(false)} 
+                        className={`flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition-colors ${
+                          isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"
+                        }`}
+                      >
                         <span className="flex items-center gap-2.5"><Ticket size={14} /> Your Bookings</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">2 Active</span>
+                        {user.activeBookingsCount > 0 && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-black border border-amber-500/20 uppercase tracking-wide">
+                            {user.activeBookingsCount} Active
+                          </span>
+                        )}
                       </Link>
 
-                      <Link to="/stream" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl text-slate-300 hover:bg-white/[0.04]">
+                      <Link 
+                        to="/stream" 
+                        onClick={() => setIsProfileOpen(false)} 
+                        className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${
+                          isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"
+                        }`}
+                      >
                         <Tv size={14} /> Streaming Library
                       </Link>
 
-                      <Link to="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl text-slate-300 hover:bg-white/[0.04]">
-                        <ShieldCheck size={14} className="text-amber-500" /> Admin Console
-                      </Link>
+                      {/* Adaptive Gate for Admin Routes */}
+                      {user.role === 'admin' && (
+                        <Link 
+                          to="/admin" 
+                          onClick={() => setIsProfileOpen(false)} 
+                          className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${
+                            isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"
+                          }`}
+                        >
+                          <ShieldCheck size={14} className="text-amber-500" /> Admin Console
+                        </Link>
+                      )}
 
                       <hr className={`my-1 ${isDarkMode ? "border-white/[0.05]" : "border-stone-100"}`} />
 
-                      <Link to="/settings" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl text-slate-300 hover:bg-white/[0.04]">
-                        <User size={14} /> Settings
+                      <Link 
+                        to="/settings" 
+                        onClick={() => setIsProfileOpen(false)} 
+                        className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${
+                          isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"
+                        }`}
+                      >
+                        <Settings size={14} /> Settings
                       </Link>
 
-                      <Link to="/support" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl text-slate-300 hover:bg-white/[0.04]">
-                        <ShieldCheck size={14} /> Help & Support
+                      <Link 
+                        to="/support" 
+                        onClick={() => setIsProfileOpen(false)} 
+                        className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${
+                          isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"
+                        }`}
+                      >
+                        <HelpCircle size={14} /> Help & Support
                       </Link>
 
                       <hr className={`my-1 ${isDarkMode ? "border-white/[0.05]" : "border-stone-100"}`} />
 
                       <button 
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          sessionStorage.clear();
-                          window.location.href = '/';
-                        }}
+                        onClick={handleLogout}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-black text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer border-none bg-transparent text-left"
                       >
                         <LogOut size={14} /> Close Session

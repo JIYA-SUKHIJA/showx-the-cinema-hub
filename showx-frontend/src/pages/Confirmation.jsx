@@ -1,16 +1,14 @@
 // src/pages/Confirmation.jsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { CheckCircle2, Ticket, MapPin, CreditCard, ChevronRight } from 'lucide-react';
 
 export default function Confirmation() {
   const navigate = useNavigate();
+  // Read the token dynamically from the active URL route parameters
+  const { bookingId } = useParams(); 
   const { selectedSeats, totalAmount, clearBookingSession } = useBooking();
-
-  const bookingRef = React.useMemo(() => {
-    return 'SHX-' + Math.floor(100000 + Math.random() * 900000);
-  }, []);
 
   const handleReturnHome = () => {
     clearBookingSession();
@@ -37,7 +35,7 @@ export default function Confirmation() {
         <div className="grid grid-cols-2 gap-4 text-center bg-slate-950 p-4 rounded-2xl border border-white/[0.04] shadow-inner">
           <div>
             <span className="text-[10px] text-slate-500 block uppercase font-black tracking-widest">Order Reference</span>
-            <span className="text-xs font-mono font-bold text-amber-500">{bookingRef}</span>
+            <span className="text-xs font-mono font-bold text-amber-500">{bookingId || "SHX-UNKNOWN"}</span>
           </div>
           <div>
             <span className="text-[10px] text-slate-500 block uppercase font-black tracking-widest">Gateway Response</span>
@@ -69,7 +67,7 @@ export default function Confirmation() {
         <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl gap-2 shadow-xl border border-white">
           <div className="w-full h-12 bg-[repeating-linear-gradient(90deg,#0f172a,#0f172a_2px,#fff_2px,#fff_7px)] opacity-95 rounded" />
           <span className="text-[9px] font-mono font-black tracking-[0.35em] text-slate-500 select-none">
-            {bookingRef}
+            {bookingId || "SHX-UNKNOWN"}
           </span>
         </div>
 

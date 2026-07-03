@@ -1,20 +1,91 @@
 // src/pages/StreamListing.jsx
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, Zap, Sparkles, Film, ArrowRight } from 'lucide-react';
+import { Play, Zap, Sparkles, Film, ArrowRight, Star, Clock } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 export default function StreamListing() {
+  const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const [activeCategory, setActiveCategory] = useState('All');
 
+  // Multi-tier expanded digital catalog collection
   const streamRentals = [
-    { id: 's1', title: 'Everything Everywhere All at Once', price: '₹149', rating: '8.5', image: 'https://images.unsplash.com/photo-1478720143033-6a972678aa30?q=80&w=600&auto=format&fit=crop', badge: 'Premiere' },
-    { id: 's2', title: 'Spider-Man: Across the Spider-Verse', price: '₹99', rating: '8.7', image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=600&auto=format&fit=crop', badge: 'Top Rent' },
-    { id: 's3', title: 'Oppenheimer', price: '₹199', rating: '8.9', image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=600&auto=format&fit=crop', badge: 'Exclusive' }
+    { 
+      id: 's1', 
+      title: 'Everything Everywhere All at Once', 
+      price: '₹149', 
+      rating: '8.5', 
+      duration: '139 min',
+      category: 'Sci-Fi',
+      image: 'https://images.unsplash.com/photo-1478720143033-6a972678aa30?q=80&w=600&auto=format&fit=crop', 
+      badge: 'Premiere' 
+    },
+    { 
+      id: 's2', 
+      title: 'Spider-Man: Across the Spider-Verse', 
+      price: '₹99', 
+      rating: '8.7', 
+      duration: '140 min',
+      category: 'Action',
+      image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=600&auto=format&fit=crop', 
+      badge: 'Top Rent' 
+    },
+    { 
+      id: 's3', 
+      title: 'Oppenheimer', 
+      price: '₹199', 
+      rating: '8.9', 
+      duration: '180 min',
+      category: 'Drama',
+      image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=600&auto=format&fit=crop', 
+      badge: 'Exclusive' 
+    },
+    { 
+      id: 's4', 
+      title: 'Interstellar: Vision Variant', 
+      price: '₹149', 
+      rating: '9.2', 
+      duration: '169 min',
+      category: 'Sci-Fi',
+      image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop', 
+      badge: '4K Ultra HD' 
+    },
+    { 
+      id: 's5', 
+      title: 'The Dark Knight Rises', 
+      price: '₹129', 
+      rating: '9.0', 
+      duration: '164 min',
+      category: 'Action',
+      image: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=600&auto=format&fit=crop', 
+      badge: 'IMAX Audio' 
+    },
+    { 
+      id: 's6', 
+      title: 'Knives Out: Glass Onion', 
+      price: '₹99', 
+      rating: '8.1', 
+      duration: '139 min',
+      category: 'Mystery',
+      image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600&auto=format&fit=crop', 
+      badge: 'Exclusives' 
+    }
   ];
 
+  const categories = ['All', 'Action', 'Sci-Fi', 'Drama', 'Mystery'];
+
+  const filteredStreams = activeCategory === 'All'
+    ? streamRentals
+    : streamRentals.filter(item => item.category === activeCategory);
+
+  const handleDynamicNavigation = (streamId) => {
+    navigate(`/stream/${streamId}`);
+  };
+
   return (
-    <div className="space-y-12 font-sans antialiased">
+    <div className="space-y-12 font-sans antialiased max-w-[1440px] mx-auto px-6 py-4">
       {/* Premium Hero Hub */}
       <div className={`relative rounded-[32px] overflow-hidden p-8 md:p-14 border shadow-xl transition-all duration-500 ${
         isDarkMode 
@@ -40,20 +111,42 @@ export default function StreamListing() {
         </div>
       </div>
 
-      {/* Media Collection Cards */}
-      <div>
-        <div className="flex items-center gap-2 mb-8">
+      {/* Dynamic Navigation Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-white/[0.04] pb-6">
+        <div className="flex items-center gap-2">
           <Sparkles size={16} className="text-amber-500" />
           <h2 className={`text-xl font-black tracking-tight ${isDarkMode ? "text-white" : "text-stone-900"}`}>New Premieres & Digital Rentals</h2>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wide border cursor-pointer transition-all active:scale-95 ${
+                activeCategory === cat
+                  ? "bg-amber-500 text-slate-950 border-transparent shadow-md"
+                  : isDarkMode
+                    ? "bg-white/[0.02] border-white/[0.06] text-slate-400 hover:text-white"
+                    : "bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Media Collection Cards */}
+      <div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {streamRentals.map((item) => (
+          {filteredStreams.map((item) => (
             <motion.div
               key={item.id}
               whileHover={{ y: -6, scale: 1.01 }}
               transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-              className={`border rounded-2xl overflow-hidden group shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between h-full relative ${
+              onClick={() => handleDynamicNavigation(item.id)}
+              className={`border rounded-2xl overflow-hidden group shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between h-full relative cursor-pointer ${
                 isDarkMode ? "bg-gradient-to-b from-white/[0.03] to-white/[0.01] border-white/[0.05]" : "bg-white border-stone-200"
               }`}
             >
@@ -63,7 +156,7 @@ export default function StreamListing() {
                 <span className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black text-[9px] tracking-widest uppercase px-2.5 py-0.5 rounded border border-white/10 shadow-md z-10 font-mono">
                   {item.badge}
                 </span>
-                <span className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md text-gold border border-white/10 text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-md z-10">
+                <span className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md text-amber-500 border border-white/10 text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-md z-10">
                   ★ {item.rating}
                 </span>
                 
@@ -79,22 +172,30 @@ export default function StreamListing() {
               </div>
 
               {/* Data payload summary panel footer */}
-              <div className={`p-5 flex items-center justify-between gap-4 flex-grow transition-colors duration-300 ${isDarkMode ? "bg-slate-900/10" : "bg-stone-50/40"}`}>
+              <div className={`p-5 flex flex-col justify-between gap-4 flex-grow transition-colors duration-300 ${isDarkMode ? "bg-slate-900/10" : "bg-stone-50/40"}`}>
                 <div className="space-y-1 overflow-hidden min-w-0">
+                  <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block">
+                    {item.category}
+                  </span>
                   <h3 className={`font-display font-black text-base truncate group-hover:text-amber-500 transition-colors duration-300 ${isDarkMode ? "text-white" : "text-stone-800"}`}>
                     {item.title}
                   </h3>
-                  <p className="text-xs font-mono font-bold text-amber-600 flex items-center gap-1">
-                    <Film size={11} /> Rent: {item.price}
-                  </p>
+                  <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium pt-1">
+                    <span className="flex items-center gap-1 font-mono font-bold text-amber-600">
+                      <Film size={11} /> Rent: {item.price}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={11} /> {item.duration}
+                    </span>
+                  </div>
                 </div>
                 
-                <button className={`px-4 py-2 font-black text-xs rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm flex items-center gap-1 shrink-0 ${
+                <button className={`w-full py-2.5 font-black text-xs rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm flex items-center justify-center gap-1 shrink-0 ${
                   isDarkMode 
                     ? "bg-white text-slate-950 hover:bg-amber-600 hover:text-white" 
                     : "bg-stone-950 text-white hover:bg-amber-600"
                 }`}>
-                  Buy Pass <ArrowRight size={13} />
+                  Buy Pass Now <ArrowRight size={13} />
                 </button>
               </div>
             </motion.div>

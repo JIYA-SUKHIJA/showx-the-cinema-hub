@@ -72,7 +72,7 @@ const router = createBrowserRouter([
       { path: 'booking/:movieId/shows', element: <Suspense fallback={<PageLoader />}><SelectShow /></Suspense> },
       { path: 'booking/:showId/seats', element: <Suspense fallback={<PageLoader />}><SelectSeats /></Suspense> },
       { path: 'checkout', element: <Suspense fallback={<PageLoader />}><Payment /></Suspense> },
-      { path: 'confirmation', element: <Suspense fallback={<PageLoader />}><Confirmation /></Suspense> },
+      { path: 'confirmation/:bookingId', element: <Suspense fallback={<PageLoader />}><Confirmation /></Suspense> },
       { path: '*', element: <Suspense fallback={<PageLoader />}><NotFound /></Suspense> },
     ],
   },
