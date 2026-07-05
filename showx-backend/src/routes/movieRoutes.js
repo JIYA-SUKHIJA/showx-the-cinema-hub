@@ -6,13 +6,15 @@ import {
   updateMovie,
   deleteMovie,
 } from "../controllers/movieController.js";
+import protect from "../middleware/authMiddleware.js";
+import isAdmin from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", createMovie);
+router.post("/", protect, isAdmin, createMovie);
 router.get("/", getMovies);
 router.get("/:id", getMovieById);
-router.put("/:id", updateMovie);
-router.delete("/:id", deleteMovie);
+router.put("/:id", protect, isAdmin, updateMovie);
+router.delete("/:id", protect, isAdmin, deleteMovie);
 
 export default router;
