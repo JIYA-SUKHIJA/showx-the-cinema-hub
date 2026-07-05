@@ -1,13 +1,18 @@
 // src/App.jsx
 import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { BookingProvider } from './context/BookingContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider } from './context/ThemeContext'; // FIXED Context path alignment rule
 import './components/styles/DashboardLayout.css';
 
 // Layout Templates remain static as they are needed immediately
 import MainLayout from './components/templates/MainLayout';
+import AuthLayout from './components/templates/AuthLayout';
 import NotFound from './pages/NotFound';
+
+// Protected Route Module Placeholder
+import ProtectedRoute from './components/organisms/ProtectedRoute';
 
 // Dynamic Lazy Imports for Public Pages & Ticketing Channels
 const Home = lazy(() => import('./pages/Home'));
@@ -24,6 +29,12 @@ const Confirmation = lazy(() => import('./pages/Confirmation'));
 // New Settings and Support Pages Loaded Safely
 const Settings = lazy(() => import('./pages/Settings'));
 const Support = lazy(() => import('./pages/Support'));
+
+// Dynamic Lazy Imports for Authentication Module Pages
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 // Dynamic Lazy Import for the Admin Dashboard page
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -65,16 +76,38 @@ const router = createBrowserRouter([
       { path: 'events/:eventId', element: <Suspense fallback={<PageLoader />}><MovieDetails /></Suspense> },
       { path: 'plays/:playId', element: <Suspense fallback={<PageLoader />}><MovieDetails /></Suspense> },
       
+      // Guarded Dashboard Profile Route
+      { 
+        path: 'profile', 
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoader />}>
+              <Profile />
+            </Suspense>
+          </ProtectedRoute>
+        ) 
+      },
+      
       // User Menu Panel Pages
       { path: 'settings', element: <Suspense fallback={<PageLoader />}><Settings /></Suspense> },
       { path: 'support', element: <Suspense fallback={<PageLoader />}><Support /></Suspense> },
       
       { path: 'booking/:movieId/shows', element: <Suspense fallback={<PageLoader />}><SelectShow /></Suspense> },
-      { path: 'booking/:showId/seats', element: <Suspense fallback={<PageLoader />}><SelectSeats /></Suspense> },
+      { path: 'booking/:movieId/seats', element: <Suspense fallback={<PageLoader />}><SelectSeats /></Suspense> },
+      
       { path: 'checkout', element: <Suspense fallback={<PageLoader />}><Payment /></Suspense> },
       { path: 'confirmation/:bookingId', element: <Suspense fallback={<PageLoader />}><Confirmation /></Suspense> },
       { path: '*', element: <Suspense fallback={<PageLoader />}><NotFound /></Suspense> },
     ],
+  },
+  {
+    path: '/',
+    element: <AuthLayout />,
+    children: [
+      { path: 'login', element: <Suspense fallback={<PageLoader />}><Login /></Suspense> },
+      { path: 'register', element: <Suspense fallback={<PageLoader />}><Register /></Suspense> },
+      { path: 'forgot-password', element: <Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense> },
+    ]
   },
   {
     path: 'admin',
@@ -86,6 +119,8 @@ export default function App() {
   return (
     <ThemeProvider>
       <BookingProvider>
+        {/* Mounts hot toast container inside root layer safely */}
+        <Toaster position="top-right" reverseOrder={false} />
         <RouterProvider router={router} />
       </BookingProvider>
     </ThemeProvider>

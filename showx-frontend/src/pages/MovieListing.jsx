@@ -1,10 +1,11 @@
 // src/pages/MovieListing.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Flame, Sparkles, LayoutGrid } from 'lucide-react';
 import MovieCard from '../components/molecules/MovieCard';
 import { useTheme } from '../context/ThemeContext';
+import { MovieCardSkeleton } from '../components/atoms/Skeletons';
 
 // Import optimized .avif image targets from your project assets folder
 import carryOnJatta4Avif from '../assets/carry-on-jatta-4-.avif';
@@ -16,76 +17,29 @@ import alphaAvif from '../assets/alpha-.avif';
 export default function MovieListing() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  
   const [selectedGenre, setSelectedGenre] = useState('All');
+  const [loading, setLoading] = useState(false);
 
-  // Comprehensive production dataset cluster pool — Optimized with AVIF assets
   const movieDataStore = [
-    { 
-      id: 'm1', 
-      title: 'Welcome To The Jungle', 
-      genre: 'Comedy', 
-      rating: '8.4', 
-      language: 'Hindi', 
-      format: '2D / Dolby Cinema', 
-      tag: 'Mass Entertainer',
-      poster: welcomeJungleAvif 
-    },
-    { 
-      id: 'm2', 
-      title: 'Spider-Man: Brand New Day', 
-      genre: 'Action', 
-      rating: '9.2', 
-      language: 'English / Hindi', 
-      format: 'IMAX 3D / 4DX', 
-      tag: 'Blockbuster',
-      poster: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=600&auto=format&fit=crop' 
-    },
-    { 
-      id: 'm3', 
-      title: 'Alpha', 
-      genre: 'Action', 
-      rating: '8.9', 
-      language: 'Hindi / Tamil / Telugu', 
-      format: '2D / ICE Theatre', 
-      tag: 'YRF Spy Universe',
-      poster: alphaAvif 
-    },
-    { 
-      id: 'm4', 
-      title: 'Main Vaapas Aaunga', 
-      genre: 'Drama', 
-      rating: '9.1', 
-      language: 'Hindi', 
-      format: '2D Standard', 
-      tag: 'Imtiaz Ali Musical',
-      poster: mainVaapasAvif 
-    },
-    { 
-      id: 'm5', 
-      title: 'Cocktail 2', 
-      genre: 'Rom-Com', 
-      rating: '8.0', 
-      language: 'Hindi', 
-      format: '2D / Atmos', 
-      tag: 'Trending Now',
-      poster: cocktail2Avif 
-    },
-    { 
-      id: 'm6', 
-      title: 'Carry on Jatta 4', 
-      genre: 'Comedy', 
-      rating: '8.8', 
-      language: 'Punjabi', 
-      format: '2D Standard', 
-      tag: 'Regional Blockbuster',
-      poster: carryOnJatta4Avif 
-    }
+    { id: 'm1', title: 'Welcome To The Jungle', genre: 'Comedy', rating: '8.4', language: 'Hindi', format: '2D / Dolby Cinema', tag: 'Mass Entertainer', poster: welcomeJungleAvif },
+    { id: 'm2', title: 'Spider-Man: Brand New Day', genre: 'Action', rating: '9.2', language: 'English / Hindi', format: 'IMAX 3D / 4DX', tag: 'Blockbuster', poster: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=600&auto=format&fit=crop' },
+    { id: 'm3', title: 'Alpha', genre: 'Action', rating: '8.9', language: 'Hindi / Tamil / Telugu', format: '2D / ICE Theatre', tag: 'YRF Spy Universe', poster: alphaAvif },
+    { id: 'm4', title: 'Main Vaapas Aaunga', genre: 'Drama', rating: '9.1', language: 'Hindi', format: '2D Standard', tag: 'Imtiaz Ali Musical', poster: mainVaapasAvif },
+    { id: 'm5', title: 'Cocktail 2', genre: 'Rom-Com', rating: '8.0', language: 'Hindi', format: '2D / Atmos', tag: 'Trending Now', poster: cocktail2Avif },
+    { id: 'm6', title: 'Carry on Jatta 4', genre: 'Comedy', rating: '8.8', language: 'Punjabi', format: '2D Standard', tag: 'Regional Blockbuster', poster: carryOnJatta4Avif }
   ];
 
   const genres = ['All', 'Action', 'Comedy', 'Drama', 'Rom-Com'];
   const filteredMovies = selectedGenre === 'All' 
     ? movieDataStore 
     : movieDataStore.filter(m => m.genre === selectedGenre);
+
+  useEffect(() => {
+    setLoading(true);
+    const filterTimer = setTimeout(() => setLoading(false), 450);
+    return () => clearTimeout(filterTimer);
+  }, [selectedGenre]);
 
   return (
     <div className="space-y-10">
@@ -96,10 +50,7 @@ export default function MovieListing() {
           ? "bg-gradient-to-r from-slate-950 via-slate-900/60 to-transparent border-white/[0.04]" 
           : "bg-gradient-to-r from-slate-100 via-slate-50 to-transparent border-slate-200"
       }`}>
-        <div 
-          className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-10 pointer-events-none" 
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop')` }} 
-        />
+        <div className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-10 pointer-events-none" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop')` }} />
         <div className="max-w-xl space-y-4 relative z-10">
           <div className="flex items-center gap-1.5 px-3 py-1 bg-crimson/10 text-crimson text-[10px] font-black tracking-widest uppercase rounded-lg border border-crimson/20 w-fit">
             <Flame size={12} /> Live Box Office Catalog
@@ -113,10 +64,8 @@ export default function MovieListing() {
         </div>
       </div>
 
-      {/* --- CONTENT CONTROLS: GENRE CHIPS DECK --- */}
-      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6 transition-colors duration-300 ${
-        isDarkMode ? "border-white/[0.04]" : "border-slate-200"
-      }`}>
+      {/* Chips Filter Matrix */}
+      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6 transition-colors duration-300 ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
         <div className="flex flex-wrap items-center gap-2">
           {genres.map((genre) => (
             <button
@@ -140,7 +89,7 @@ export default function MovieListing() {
         </div>
       </div>
 
-      {/* --- MAIN GRID CONTENT DECK --- */}
+      {/* Grid Canvas */}
       <div>
         <div className="flex items-center gap-2 mb-6">
           <Sparkles size={16} className="text-gold" />
@@ -149,20 +98,23 @@ export default function MovieListing() {
           </h2>
         </div>
 
-        <motion.div 
-          layout 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {filteredMovies.map((movie) => (
-            <motion.div key={movie.id} layout>
-              <MovieCard 
-                movie={movie} 
-                onActionClick={() => navigate(`/booking/${movie.id}/shows`)} 
-                actionLabel="Reserve Seats"
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            Array.from({ length: filteredMovies.length || 3 }).map((_, idx) => (
+              <MovieCardSkeleton key={idx} />
+            ))
+          ) : (
+            filteredMovies.map((movie) => (
+              <motion.div key={movie.id} layout>
+                <MovieCard 
+                  movie={movie} 
+                  onActionClick={() => navigate(`/booking/${movie.id}/shows`)} 
+                  actionLabel="Reserve Seats"
+                />
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
 
     </div>

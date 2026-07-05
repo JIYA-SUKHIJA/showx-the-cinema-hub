@@ -28,6 +28,11 @@ export function BookingProvider({ children }) {
     return saved ? Number(saved) : 0;
   });
 
+  // Initialize city location from cache, otherwise default to premium baseline cluster 'Karnal'
+  const [selectedCity, setSelectedCity] = useState(() => {
+    return localStorage.getItem('shx_city') || 'Karnal';
+  });
+
   // 2. Synchronize states with localStorage whenever they update
   useEffect(() => {
     if (selectedMovie) localStorage.setItem('shx_movie', JSON.stringify(selectedMovie));
@@ -52,6 +57,12 @@ export function BookingProvider({ children }) {
     localStorage.setItem('shx_amount', totalAmount.toString());
   }, [totalAmount]);
 
+  // Synchronize the city selection state to localStorage
+  useEffect(() => {
+    if (selectedCity) localStorage.setItem('shx_city', selectedCity);
+    else localStorage.removeItem('shx_city');
+  }, [selectedCity]);
+
   // 3. Clear session out cleanly when order completes
   const clearBookingSession = () => {
     setSelectedMovie(null);
@@ -64,6 +75,7 @@ export function BookingProvider({ children }) {
     localStorage.removeItem('shx_showtime');
     localStorage.removeItem('shx_seats');
     localStorage.removeItem('shx_amount');
+    // Note: selectedCity is intentionally preserved so the user's location remains fixed across completions
   };
 
   return (
@@ -79,6 +91,8 @@ export function BookingProvider({ children }) {
         setSelectedSeats,
         totalAmount,
         setTotalAmount,
+        selectedCity,       // Exposed layout tracking hook
+        setSelectedCity,   // Exposed mutation dispatch variable
         clearBookingSession,
       }}
     >

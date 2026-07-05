@@ -11,7 +11,7 @@ export default function MainLayout() {
   const { isDarkMode } = useTheme();
 
   return (
-    <div className={`flex flex-col min-h-screen font-sans antialiased selection:bg-crimson/30 selection:text-white transition-colors duration-300 ${
+    <div className={`flex flex-col min-h-screen font-sans antialiased selection:bg-crimson/30 selection:text-white transition-colors duration-300 relative ${
       isDarkMode ? "bg-[#060911] text-white" : "bg-slate-50 text-slate-900"
     }`}>
       
@@ -30,10 +30,10 @@ export default function MainLayout() {
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
             className="h-full w-full"
           >
             <Outlet />
