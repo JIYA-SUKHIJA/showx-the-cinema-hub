@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Play, Star, Flame, Building, Ticket, MapPin, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Flame, Building, Ticket, MapPin, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { fetchItemsByType } from '../services/api';
 import axiosInstance from '../services/axiosInstance';
@@ -14,6 +14,12 @@ const THEATRE_BG_IMAGES = [
   "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=800&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=800&auto=format&fit=crop",
 ];
+
+// Structural variants configuration for unified lazy scroll reveal actions
+const scrollRevealVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+};
 
 export default function Home() {
   const navigate = useNavigate();
@@ -76,6 +82,7 @@ export default function Home() {
   return (
     <div className="space-y-12 pb-16 relative">
       
+      {/* MAIN CAROUSEL BANNER LAYER */}
       {loading || carouselBanners.length === 0 ? (
         <HomeHeroSkeleton />
       ) : (
@@ -87,17 +94,18 @@ export default function Home() {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
-              initial={{ opacity: 0, scale: 1.01 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.7, ease: "easeInOut" }}
-              className="absolute inset-0 w-full h-full"
+              transition={{ duration: 0.6 }}
+              className="absolute inset-0 w-full h-full overflow-hidden"
             >
+              {/* Premium Hardware-Accelerated Ken Burns Animation Loop Implemented natively via Class */}
               <img 
                 src={carouselBanners[currentSlide].image} 
                 alt={carouselBanners[currentSlide].title}
                 style={{ objectPosition: `center ${carouselBanners[currentSlide].heroFocusY}` }}
-                className="w-full h-full object-cover select-none transition-all duration-700"
+                className="w-full h-full object-cover select-none animate-ken-burns"
               />
               
               <div className={`absolute inset-0 z-10 bg-gradient-to-t ${isDarkMode ? "from-slate-950 via-slate-950/50 to-transparent" : "from-stone-950 via-stone-950/40 to-transparent"}`} />
@@ -105,17 +113,17 @@ export default function Home() {
               
               <div className="absolute inset-0 z-20 flex flex-col justify-end px-6 sm:px-12 md:px-16 pb-12 md:pb-16 max-w-3xl text-white">
                 <div className="flex flex-wrap items-center gap-2.5 mb-4">
-                  <span className="inline-block px-2.5 py-0.5 text-[9px] font-black tracking-widest bg-amber-500 text-stone-950 rounded-md uppercase">
+                  <span className="inline-block px-2.5 py-0.5 text-[9px] font-black tracking-widest bg-amber-500 text-stone-950 rounded-md uppercase shadow-md shadow-amber-500/10">
                     {carouselBanners[currentSlide].badge}
                   </span>
-                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide text-amber-400">
+                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide text-amber-400 shadow-sm">
                     <Star size={10} className="fill-amber-400 stroke-amber-400" />
                     <span>{carouselBanners[currentSlide].rating}</span>
                   </div>
-                  <span className="text-[10px] font-medium text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-medium text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded border border-white/5">
                     {carouselBanners[currentSlide].duration}
                   </span>
-                  <div className="hidden sm:flex items-center gap-1 text-[10px] text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded">
+                  <div className="hidden sm:flex items-center gap-1 text-[10px] text-slate-300 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded border border-white/5">
                     <Calendar size={11} className="text-amber-500" />
                     <span>{carouselBanners[currentSlide].date}</span>
                   </div>
@@ -141,10 +149,10 @@ export default function Home() {
                 
                 <div className="flex flex-wrap gap-3.5">
                   <motion.button
-                    whileHover={{ scale: 1.02, filter: "brightness(1.05)" }}
+                    whileHover={{ scale: 1.02, filter: "brightness(1.05)", shadow: "0 10px 20px rgba(245, 158, 11, 0.2)" }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate(carouselBanners[currentSlide].link)}
-                    className="px-6 py-3 rounded-xl text-xs font-black bg-amber-500 text-stone-950 shadow-lg shadow-amber-500/20 cursor-pointer flex items-center gap-2 border-none"
+                    className="px-6 py-3 rounded-xl text-xs font-black bg-amber-500 text-stone-950 shadow-lg shadow-amber-500/20 cursor-pointer flex items-center gap-2 border-none transition-shadow"
                   >
                     <Ticket size={14} /> Book Now
                   </motion.button>
@@ -164,13 +172,19 @@ export default function Home() {
         </div>
       )}
 
-      {/* Recommended Movies Section */}
-      <div className="space-y-6">
+      {/* RECOMMENDED MOVIES SECTION */}
+      <motion.div 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={scrollRevealVariants}
+        className="space-y-6"
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-xl md:text-2xl font-black font-display tracking-tight flex items-center gap-2">
             <Flame size={20} className="text-amber-500" /> Recommended Movies
           </h2>
-          <button onClick={() => navigate('/movies')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer">View All</button>
+          <button onClick={() => navigate('/movies')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer focus:outline-none">View All</button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
@@ -181,43 +195,49 @@ export default function Home() {
             ))
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Theatres Section */}
-      <div className="space-y-6">
+      {/* THEATRES SECTION */}
+      <motion.div 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={scrollRevealVariants}
+        className="space-y-6"
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-xl md:text-2xl font-black font-display tracking-tight flex items-center gap-2">
             <Building size={20} className="text-amber-500" /> Book at Your Favorite Theatres
           </h2>
-          <button onClick={() => navigate('/theatres')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer">View All</button>
+          <button onClick={() => navigate('/theatres')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer focus:outline-none">View All</button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           {loading ? (
-            Array.from({ length: 3 }).map((_, idx) => <MovieCardSkeleton key={idx} />)
+            Array.from({ length: 2 }).map((_, idx) => <MovieCardSkeleton key={idx} />)
           ) : (
             theatres.map((t, idx) => (
               <button
                 key={t._id}
                 onClick={() => navigate('/theatres')}
-                className="relative text-left rounded-3xl overflow-hidden border border-white/[0.08] group h-52 shadow-xl"
+                className="relative text-left rounded-3xl overflow-hidden border border-white/[0.08] group h-52 shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50"
               >
                 <img
                   src={THEATRE_BG_IMAGES[idx % THEATRE_BG_IMAGES.length]}
                   alt={t.name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-[1.04]"
                 />
-                <div className={`absolute inset-0 ${isDarkMode ? "bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-slate-950/30" : "bg-gradient-to-t from-stone-950/90 via-stone-950/60 to-stone-950/20"}`} />
-                <div className="absolute inset-0 bg-amber-500/10 mix-blend-overlay" />
+                <div className={`absolute inset-0 transition-opacity duration-300 group-hover:opacity-90 ${isDarkMode ? "bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-slate-950/30" : "bg-gradient-to-t from-stone-950/90 via-stone-950/60 to-stone-950/20"}`} />
+                <div className="absolute inset-0 bg-amber-500/5 mix-blend-overlay" />
 
-                <div className="relative z-10 h-full flex flex-col justify-end p-6">
-                  <div className="w-11 h-11 rounded-2xl bg-amber-500/15 backdrop-blur-md border border-amber-500/30 flex items-center justify-center mb-3">
+                <div className="relative z-10 h-full flex flex-col justify-end p-6 transition-transform duration-300 group-hover:translate-y-[-2px]">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-500/15 backdrop-blur-md border border-amber-500/30 flex items-center justify-center mb-3 shadow-md">
                     <Building size={20} className="text-amber-400" />
                   </div>
-                  <h3 className="text-lg font-black text-white">{t.name}</h3>
-                  <p className="text-sm text-slate-300 mt-1 flex items-center gap-1">
+                  <h3 className="text-lg font-black text-white drop-shadow-sm">{t.name}</h3>
+                  <p className="text-sm text-slate-300 mt-1 flex items-center gap-1 opacity-90">
                     <MapPin size={12} className="text-amber-400" /> {t.location}, {t.city}
                   </p>
-                  <p className="text-xs text-amber-400 font-bold mt-2 tracking-wide">
+                  <p className="text-xs text-amber-400 font-bold mt-2 tracking-wide font-mono">
                     {(t.formats || []).join(' • ')}
                   </p>
                 </div>
@@ -225,7 +245,7 @@ export default function Home() {
             ))
           )}
         </div>
-      </div>
+      </motion.div>
 
     </div>
   );

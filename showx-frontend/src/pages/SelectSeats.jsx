@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useTheme } from '../context/ThemeContext';
-import { Armchair, ChevronRight, ChevronLeft, MapPin } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Armchair, ChevronRight, ChevronLeft, MapPin, Sparkles, HelpCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SeatSelectionSkeleton } from '../components/atoms/Skeletons';
 import axiosInstance from '../services/axiosInstance';
 
@@ -19,6 +19,7 @@ export default function SelectSeats() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [hoveredSeat, setHoveredSeat] = useState(null);
 
   const bookedSeats = selectedShow?.bookedSeats || [];
   const pricePerSeat = selectedShow?.price || 0;
@@ -28,8 +29,6 @@ export default function SelectSeats() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Agar koi purana selected seat (localStorage se persist hua) ab "already booked"
-  // nikle is show ke liye, use turant selection se hata do
   useEffect(() => {
     if (bookedSeats.length > 0) {
       setSelectedSeats((prev) => prev.filter((seat) => !bookedSeats.includes(seat)));
@@ -51,6 +50,14 @@ export default function SelectSeats() {
       updatedSeats = [...selectedSeats, seatId];
     }
     setSelectedSeats(updatedSeats);
+  };
+
+  const handleKeyDown = (e, seatId, isBooked) => {
+    if (isBooked) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSeatClick(seatId);
+    }
   };
 
   const handleCheckout = async () => {
@@ -78,7 +85,7 @@ export default function SelectSeats() {
 
   if (!selectedShow) {
     return (
-      <div className="max-w-2xl mx-auto text-center py-20 text-sm text-slate-400">
+      <div className="max-w-2xl mx-auto text-center py-20 text-sm text-slate-400 font-mono">
         No show selected. Please go back and choose a showtime first.
       </div>
     );
@@ -86,39 +93,91 @@ export default function SelectSeats() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.99 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={`max-w-5xl mx-auto border rounded-[32px] p-4 sm:p-8 md:p-10 shadow-2xl transition-all duration-500 relative ${
-        isDarkMode ? "bg-slate-950 border-white/[0.04] text-slate-100" : "bg-gradient-to-br from-[#faf9f5] via-[#f5f3eb] to-[#eae7dc] border-stone-200/80 shadow-[0_20px_50px_rgba(218,165,32,0.02)] text-stone-900" 
+        isDarkMode 
+          ? "bg-slate-950 border-white/[0.04] text-slate-100 shadow-black/80" 
+          : "bg-gradient-to-br from-[#FAFAF8] via-[#F4F2E9] to-[#EAE6D8] border-stone-200/80 shadow-[0_30px_60px_rgba(218,165,32,0.03)] text-stone-900" 
       }`}
     >
-      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600" />
+      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500" />
       
+      {/* --- HEADER DESK PANEL --- */}
       <div className={`flex items-center justify-between border-b pb-5 mb-8 text-xs font-black uppercase tracking-widest ${isDarkMode ? "border-white/[0.04] text-slate-400" : "border-stone-200 text-stone-500"}`}>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate(-1)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer bg-transparent font-black ${isDarkMode ? "border-white/10 text-slate-300 hover:text-white" : "border-stone-300 text-stone-700 hover:text-stone-950"}`}>
+        <motion.button 
+          whileHover={{ scale: 1.03, x: -2 }} 
+          whileTap={{ scale: 0.97 }} 
+          onClick={() => navigate(-1)} 
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer bg-transparent font-black focus:outline-none focus:ring-2 focus:ring-amber-500/40 ${isDarkMode ? "border-white/10 text-slate-300 hover:text-white" : "border-stone-300 text-stone-700 hover:text-stone-950"}`}
+        >
           <ChevronLeft size={14} /> Back
         </motion.button>
         <span className="flex items-center gap-1.5 font-display tracking-widest">
-          <Armchair size={14} className={isDarkMode ? "text-amber-500" : "text-amber-600"} /> 
+          <Armchair size={14} className={isDarkMode ? "text-amber-500 animate-pulse" : "text-amber-600 animate-pulse"} /> 
           Theater Configuration Matrix
         </span>
       </div>
 
-      <div className={`mb-8 p-4 rounded-2xl border ${isDarkMode ? "bg-white/[0.01] border-white/[0.05]" : "bg-stone-100/50 border-stone-200"}`}>
-        <p className="text-[10px] font-black tracking-wider text-slate-500 uppercase mb-2">Selected Show:</p>
-        <span className={`text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 border w-fit ${isDarkMode ? "bg-slate-900 border-white/5 text-white" : "bg-white border-stone-200 text-slate-800"}`}>
+      {/* --- SHOW IDENTIFICATION CARD --- */}
+      <div className={`mb-6 p-4 rounded-2xl border transition-all ${isDarkMode ? "bg-white/[0.01] border-white/[0.05]" : "bg-white/60 border-stone-200/60 backdrop-blur-sm shadow-sm"}`}>
+        <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase mb-2 font-mono flex items-center gap-1">
+          <Sparkles size={11} className="text-amber-500" /> Selected Show Node:
+        </p>
+        <span className={`text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 border w-fit transition-transform hover:scale-[1.01] ${isDarkMode ? "bg-slate-900 border-white/5 text-white" : "bg-[#FAFAF8] border-stone-200 text-stone-800 shadow-sm"}`}>
           <MapPin size={12} className="text-amber-500" /> {selectedShow.theatre.name} &bull; {selectedShow.showTime} &bull; ₹{pricePerSeat}/seat
         </span>
       </div>
 
-      <div className="relative flex flex-col items-center mb-16 px-4">
-        <div className={`w-4/5 h-2 rounded-full transition-all duration-500 ${isDarkMode ? "bg-gradient-to-b from-amber-500 via-amber-400/30 to-transparent" : "bg-gradient-to-b from-amber-600 via-amber-500/20 to-transparent"}`} />
-        <span className={`text-[9px] font-black uppercase tracking-[0.5em] mt-4 select-none ${isDarkMode ? "text-amber-400/70" : "text-amber-800"}`}>SCREEN THIS WAY</span>
+      {/* --- SEAT STATUS MATRIX LEGEND --- */}
+      <div className="flex flex-wrap justify-center gap-6 mb-8 text-[10px] font-black uppercase tracking-wider font-mono">
+        <div className="flex items-center gap-2">
+          <span className={`w-3.5 h-3.5 rounded border ${isDarkMode ? "bg-white/[0.02] border-white/10" : "bg-stone-50 border-slate-200"}`} />
+          <span className="opacity-70">Available</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded border bg-amber-500 border-amber-500" />
+          <span className="text-amber-500">Selected</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`w-3.5 h-3.5 rounded border opacity-40 ${isDarkMode ? "bg-slate-900 border-slate-950" : "bg-slate-200 border-slate-300"}`} />
+          <span className="opacity-40">Booked</span>
+        </div>
       </div>
 
-      <div className="overflow-x-auto pb-6 mb-6 scrollbar-thin scrollbar-thumb-white/10 custom-scrollbar"> 
-        <div className="min-w-[760px] flex flex-col gap-3.5 px-4 select-none">
+      {/* --- CINEMA CURVED SCREEN GRAPHIC --- */}
+      <div className="relative flex flex-col items-center mb-14 px-4">
+        <div className={`w-4/5 h-2 rounded-full transition-all duration-700 ${
+          isDarkMode 
+            ? "bg-gradient-to-b from-amber-500 via-amber-500/20 to-transparent blur-[1px] shadow-[0_4px_20px_rgba(245,158,11,0.15)]" 
+            : "bg-gradient-to-b from-amber-600 via-amber-500/10 to-transparent blur-[0.5px] shadow-[0_4px_15px_rgba(217,119,6,0.08)]"
+        }`} />
+        <span className={`text-[9px] font-black uppercase tracking-[0.6em] mt-4 select-none ${isDarkMode ? "text-amber-400/60" : "text-amber-800/80"}`}>SCREEN THIS WAY</span>
+      </div>
+
+      {/* --- INTERACTIVE SEAT GRID --- */}
+      <div className="overflow-x-auto pb-6 mb-4 no-scrollbar"> 
+        <div className="min-w-[760px] flex flex-col gap-3.5 px-4 select-none relative">
+          
+          {/* Real-time Dynamic Tooltip Popover Overlay */}
+          <AnimatePresence>
+            {hoveredSeat && (
+              <motion.div 
+                initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                style={{ left: hoveredSeat.x, top: hoveredSeat.y - 36 }}
+                className="absolute z-30 transform -translate-x-1/2 pointer-events-none px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[10px] font-mono font-black text-white shadow-xl flex items-center gap-1.5"
+              >
+                <span className="text-amber-500">{hoveredSeat.id}</span>
+                <span className="opacity-40">|</span>
+                <span>₹{pricePerSeat}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {ROWS.map((row) => {
             const isVIP = row === 'A' || row === 'B';
             return (
@@ -130,11 +189,42 @@ export default function SelectSeats() {
                     const isBooked = bookedSeats.includes(seatId);
                     const isSelected = selectedSeats.includes(seatId);
                     const insertGap = num === 3 || num === 9;
+                    
                     return (
                       <React.Fragment key={seatId}>
-                        <motion.button disabled={isBooked} onClick={() => handleSeatClick(seatId)} whileHover={!isBooked ? { scale: 1.12 } : {}} whileTap={!isBooked ? { scale: 0.92 } : {}} className={`w-7 h-7 rounded-lg text-[9px] font-mono font-black border transition-all flex items-center justify-center select-none cursor-pointer ${isBooked ? (isDarkMode ? "bg-slate-900 border-slate-950 text-slate-700 opacity-25" : "bg-slate-200 border-slate-300 text-slate-400 opacity-40") : isSelected ? "bg-amber-500 border-amber-500 text-stone-950" : isVIP ? (isDarkMode ? "bg-amber-500/5 border-amber-500/30 text-amber-500" : "bg-amber-50 border-amber-300/60 text-amber-700") : (isDarkMode ? "bg-white/[0.02] border-white/10 text-slate-300" : "bg-stone-50 border-slate-200 text-slate-600")}`}>
-                          {num} 
-                        </motion.button>
+                        <motion.div
+                          onMouseEnter={(e) => {
+                            if (isBooked) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const containerRect = e.currentTarget.parentElement.parentElement.parentElement.getBoundingClientRect();
+                            setHoveredSeat({
+                              id: seatId,
+                              x: rect.left - containerRect.left + rect.width / 2,
+                              y: rect.top - containerRect.top
+                            });
+                          }}
+                          onMouseLeave={() => setHoveredSeat(null)}
+                          className="relative"
+                        >
+                          <button 
+                            disabled={isBooked} 
+                            onClick={() => handleSeatClick(seatId)}
+                            onKeyDown={(e) => handleKeyDown(e, seatId, isBooked)}
+                            tabIndex={isBooked ? -1 : 0}
+                            aria-label={`Seat row ${row} number ${num}, ${isBooked ? 'Booked' : isSelected ? 'Selected' : 'Available'}`}
+                            className={`w-7 h-7 rounded-lg text-[9px] font-mono font-black border flex items-center justify-center select-none cursor-pointer transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                              isBooked 
+                                ? (isDarkMode ? "bg-slate-900 border-slate-950 text-slate-700 opacity-25 cursor-not-allowed" : "bg-slate-200 border-slate-300 text-slate-400 opacity-40 cursor-not-allowed") 
+                                : isSelected 
+                                  ? "bg-amber-500 border-amber-500 text-stone-950 scale-105 shadow-md shadow-amber-500/20" 
+                                  : isVIP 
+                                    ? (isDarkMode ? "bg-amber-500/5 border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500" : "bg-amber-50 border-amber-300/60 text-amber-700 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500") 
+                                    : (isDarkMode ? "bg-white/[0.02] border-white/10 text-slate-300 hover:border-amber-500/50 hover:text-amber-500" : "bg-stone-50 border-slate-200 text-slate-600 hover:border-amber-500/50 hover:text-amber-600")
+                            }`}
+                          >
+                            {num} 
+                          </button>
+                        </motion.div>
                         {insertGap && <div className="w-6 sm:w-8" />}
                       </React.Fragment>
                     );
@@ -147,39 +237,76 @@ export default function SelectSeats() {
         </div>
       </div>
 
+      {/* --- SELECTED SEAT SUMMARY CHIPS CLUSTER --- */}
+      <div className="max-w-3xl mx-auto mb-4 px-1 min-h-[26px]">
+        <AnimatePresence>
+          {selectedSeats.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="flex flex-wrap gap-1.5 items-center justify-start"
+            >
+              <span className="text-[9px] font-mono font-black uppercase tracking-wider text-slate-500 mr-1 select-none">Active Token Array:</span>
+              {selectedSeats.map(seat => (
+                <motion.span 
+                  key={seat}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  onClick={() => handleSeatClick(seat)}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-amber-500/10 border border-amber-500/30 text-amber-500 cursor-pointer hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 transition-colors"
+                >
+                  {seat} <span className="opacity-40 text-[8px] font-sans">✕</span>
+                </motion.span>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {errorMsg && (
-        <p className="text-center text-xs font-bold text-rose-500 mb-4">{errorMsg}</p>
+        <p className="text-center text-xs font-bold text-rose-500 mb-4 font-mono">{errorMsg}</p>
       )}
 
-      <div className="max-w-3xl mx-auto border p-5 sm:p-6 rounded-2xl flex flex-col sm:flex-row gap-5 items-center justify-between shadow-xl relative bg-slate-900/40 border-white/[0.05]">
+      {/* --- STICKY STAGE PAYMENT FOOTER PLATFORM --- */}
+      <div className={`max-w-3xl mx-auto border p-5 sm:p-6 rounded-2xl flex flex-col sm:flex-row gap-5 items-center justify-between shadow-xl backdrop-blur-md transition-all ${
+        isDarkMode 
+          ? "bg-slate-900/60 border-white/[0.05]" 
+          : "bg-white/70 border-stone-200/80 shadow-md shadow-stone-900/5"
+      }`}>
         <div className="flex gap-12 text-xs font-medium self-start sm:self-auto">
           <div>
             <span className={`block text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? "text-slate-500" : "text-stone-400"}`}>Tickets</span>
-            <span className={`font-mono font-black tracking-wide block min-h-[18px] text-sm ${selectedSeats.length > 0 ? "text-amber-500" : "text-slate-400"}`}>
-              {selectedSeats.length > 0 ? `${selectedSeats.length} Seats` : 'None Selected'}
+            <span className={`font-mono font-black tracking-wide block min-h-[18px] text-sm transition-colors ${selectedSeats.length > 0 ? "text-amber-500" : "text-slate-400"}`}>
+              {selectedSeats.length > 0 ? `${selectedSeats.length} Selected` : 'None Selected'}
             </span>
           </div>
           <div>
             <span className={`block text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? "text-slate-500" : "text-stone-400"}`}>Aggregated Fee</span>
-            <span className={`font-black text-lg font-mono ${isDarkMode ? "text-white" : "text-stone-900"}`}> 
+            <span className={`font-black text-lg font-mono tracking-tight transition-colors ${selectedSeats.length > 0 ? "text-amber-500" : isDarkMode ? "text-white" : "text-stone-900"}`}> 
               ₹{selectedSeats.length * pricePerSeat}.00
             </span>
           </div>
         </div>
 
         <motion.button
-          whileHover={selectedSeats.length > 0 ? { scale: 1.03, filter: "brightness(1.06)" } : {}}
-          whileTap={selectedSeats.length > 0 ? { scale: 0.97 } : {}}
+          whileHover={selectedSeats.length > 0 ? { scale: 1.02, filter: "brightness(1.04)" } : {}}
+          whileTap={selectedSeats.length > 0 ? { scale: 0.98 } : {}}
           onClick={handleCheckout}
           disabled={selectedSeats.length === 0 || submitting}
-          className={`w-full sm:w-auto px-8 py-3.5 font-black text-xs uppercase tracking-widest rounded-xl transition-all border ${selectedSeats.length > 0 ? (isDarkMode ? "bg-white text-slate-950 border-transparent" : "bg-stone-950 text-white border-transparent") : (isDarkMode ? "bg-white/[0.02] border-white/[0.04] text-slate-600" : "bg-stone-100 border-stone-200 text-stone-400")}`}
+          className={`w-full sm:w-auto px-8 py-3.5 font-black text-xs uppercase tracking-widest rounded-xl transition-all border outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 ${
+            selectedSeats.length > 0 
+              ? (isDarkMode ? "bg-white text-slate-950 border-transparent cursor-pointer" : "bg-stone-950 text-white border-transparent cursor-pointer") 
+              : (isDarkMode ? "bg-white/[0.01] border-white/[0.03] text-slate-700 cursor-not-allowed" : "bg-stone-100 border-stone-200/60 text-stone-400 cursor-not-allowed")
+          }`}
         >
           {submitting ? "Booking..." : "Proceed to Payment"} <ChevronRight size={13} strokeWidth={2.5} className="inline-block ml-0.5" /> 
         </motion.button>
       </div>
       
-      <div className={`text-center text-[10px] font-mono font-medium mt-10 tracking-wider select-none ${isDarkMode ? "text-slate-600" : "text-stone-400"}`}>
-        &copy; 2026 SHOWX HUB // INCUBATED NODE DATA CHANNELS 
+      <div className={`text-center text-[10px] font-mono font-medium mt-10 tracking-wider select-none ${isDarkMode ? "text-slate-600" : "text-stone-500/60"}`}>
+        &copy; {new Date().getFullYear()} SHOWX HUB // INCUBATED NODE DATA CHANNELS 
       </div>
     </motion.div>
   );

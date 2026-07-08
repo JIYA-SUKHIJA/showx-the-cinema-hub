@@ -1,3 +1,4 @@
+// src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ import DataTable from '../components/Admin/DataTable';
 import UsersTable from '../components/Admin/UsersTable';
 import SystemSettings from '../components/Admin/SystemSettings';
 import { TableSkeleton, CardSkeleton } from '../components/Admin/Skeleton';
+import { useTheme } from '../context/ThemeContext';
 import {
   fetchDashboardStats,
   fetchWeeklyTrend,
@@ -30,7 +32,7 @@ import {
   deleteShowAdmin,
   fetchAllPaymentsAdmin,
 } from '../services/adminApi';
-import { Bell, Search, UserCircle, Activity, Server, Clock, ChevronDown, Settings, LogOut, Plus, X } from 'lucide-react';
+import { Bell, Search, UserCircle, Server, Clock, ChevronDown, Settings, LogOut, Plus, X, RefreshCw, Layers, Sun, Moon } from 'lucide-react';
 
 const EMPTY_MOVIE_FORM = {
   title: '',
@@ -65,16 +67,19 @@ const EMPTY_SHOW_FORM = {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const [timeGreeting, setTimeGreeting] = useState("Welcome");
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [adminNotifications, setAdminNotifications] = useState([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [lastSyncTime, setLastSyncTime] = useState(new Date().toLocaleTimeString());
 
   const [stats, setStats] = useState(null);
   const [weeklyTrend, setWeeklyTrend] = useState([]);
@@ -102,18 +107,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
+    const hours = new Date().getHours();
+    if (hours < 12) setTimeGreeting("Good morning");
+    else if (hours < 17) setTimeGreeting("Good afternoon");
+    else setTimeGreeting("Good evening");
     return () => clearInterval(timer);
   }, []);
 
-  // Load admin notifications once on mount.
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const res = await axiosInstance.get('/notifications/admin');
-        setAdminNotifications(res.data.notifications);
-        setUnreadNotifCount(res.data.unreadCount);
+        setAdminNotifications(res.data?.notifications || []);
+        setUnreadNotifCount(res.data?.unreadCount || 0);
       } catch (err) {
-        // Non-critical — dashboard still works without notifications.
+        // Safe tracking fallback bypass
       }
     };
     fetchNotifications();
@@ -122,14 +130,13 @@ export default function AdminDashboard() {
   const handleNotifBellClick = async () => {
     const opening = !showNotifMenu;
     setShowNotifMenu(opening);
-
     if (opening && unreadNotifCount > 0) {
       try {
         await axiosInstance.put('/notifications/read-all');
         setUnreadNotifCount(0);
         setAdminNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       } catch (err) {
-        // Non-critical.
+        // Safe dynamic recovery bypass
       }
     }
   };
@@ -139,33 +146,39 @@ export default function AdminDashboard() {
     try {
       if (activeTab === 'dashboard') {
         const [statsData, trendData] = await Promise.all([
-          fetchDashboardStats(),
-          fetchWeeklyTrend(),
+          fetchDashboardStats().catch(() => null),
+          fetchWeeklyTrend().catch(() => []),
         ]);
-        setStats(statsData);
-        setWeeklyTrend(trendData);
+        setStats(statsData || { totalRevenue: 0, totalBookings: 0, totalUsers: 0, activeMovies: 0 });
+        setWeeklyTrend(trendData || []);
       } else if (activeTab === 'bookings') {
-        setBookings(await fetchAllBookings());
+        const data = await fetchAllBookings().catch(() => []);
+        setBookings(Array.isArray(data) ? data : []);
       } else if (activeTab === 'users') {
-        setUsers(await fetchAllUsers());
+        const data = await fetchAllUsers().catch(() => []);
+        setUsers(Array.isArray(data) ? data : []);
       } else if (activeTab === 'movies') {
-        setMovies(await fetchAllMoviesAdmin());
+        const data = await fetchAllMoviesAdmin().catch(() => []);
+        setMovies(Array.isArray(data) ? data : []);
       } else if (activeTab === 'theatres') {
-        setTheatres(await fetchAllTheatresAdmin());
+        const data = await fetchAllTheatresAdmin().catch(() => []);
+        setTheatres(Array.isArray(data) ? data : []);
       } else if (activeTab === 'shows') {
         const [showsData, moviesData, theatresData] = await Promise.all([
-          fetchAllShowsAdmin(),
-          fetchAllMoviesAdmin(),
-          fetchAllTheatresAdmin(),
+          fetchAllShowsAdmin().catch(() => []),
+          fetchAllMoviesAdmin().catch(() => []),
+          fetchAllTheatresAdmin().catch(() => []),
         ]);
-        setShows(showsData);
-        setMovies(moviesData);
-        setTheatres(theatresData);
+        setShows(Array.isArray(showsData) ? showsData : []);
+        setMovies(Array.isArray(moviesData) ? moviesData : []);
+        setTheatres(Array.isArray(theatresData) ? theatresData : []);
       } else if (activeTab === 'payments') {
-        setPayments(await fetchAllPaymentsAdmin());
+        const data = await fetchAllPaymentsAdmin().catch(() => []);
+        setPayments(Array.isArray(data) ? data : []);
       }
+      setLastSyncTime(new Date().toLocaleTimeString());
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Failed to load data');
+      showxToast.adminError(err?.response?.data?.message || 'Failed to load module data streams.');
     } finally {
       setLoading(false);
     }
@@ -176,49 +189,50 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  // Defensive array checks with complete object optional chaining safeguards
   const bookingRows = bookings.map((b) => ({
-    id: b._id,
-    movie: b.show?.movie?.title || '—',
-    user: b.user?.name || '—',
-    seats: b.seats?.length ?? 0,
-    amount: `₹${b.totalAmount}`,
-    status: b.paymentStatus === 'paid' ? 'Completed' : b.paymentStatus === 'failed' ? 'Cancelled' : 'Pending',
+    id: b?._id || '—',
+    movie: b?.show?.movie?.title || b?.movieTitle || '—',
+    user: b?.user?.name || b?.userName || '—',
+    seats: b?.seats?.length ?? 0,
+    amount: `₹${b?.totalAmount || 0}`,
+    status: b?.paymentStatus === 'paid' ? 'Completed' : b?.paymentStatus === 'failed' ? 'Cancelled' : 'Pending',
   }));
 
   const movieRows = movies.map((m) => ({
-    id: m._id,
-    title: m.title,
-    category: m.type,
-    genre: m.genre,
-    language: m.language,
-    rating: m.rating,
+    id: m?._id || '—',
+    title: m?.title || '—',
+    category: m?.type || 'movie',
+    genre: m?.genre || '—',
+    language: m?.language || '—',
+    rating: m?.rating || '8.0',
   }));
 
   const theatreRows = theatres.map((t) => ({
-    id: t._id,
-    name: t.name,
-    location: t.location,
-    city: t.city,
-    formats: (t.formats || []).join(', '),
+    id: t?._id || '—',
+    name: t?.name || '—',
+    location: t?.location || '—',
+    city: t?.city || '—',
+    formats: Array.isArray(t?.formats) ? t.formats.join(', ') : '2D',
   }));
 
   const showRows = shows.map((s) => ({
-    id: s._id,
-    movie: s.movie?.title || '—',
-    theatre: s.theatre?.name || '—',
-    date: s.showDate ? new Date(s.showDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—',
-    time: s.showTime,
-    price: `₹${s.price}`,
-    seats: `${s.bookedSeats?.length ?? 0}/${s.totalSeats}`,
+    id: s?._id || '—',
+    movie: s?.movie?.title || '—',
+    theatre: s?.theatre?.name || '—',
+    date: s?.showDate ? new Date(s.showDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—',
+    time: s?.showTime || '—',
+    price: `₹${s?.price || 0}`,
+    seats: `${s?.bookedSeats?.length ?? 0}/${s?.totalSeats || 96}`,
   }));
 
   const paymentRows = payments.map((p) => ({
-    id: p._id,
-    user: p.user?.name || '—',
-    movie: p.show?.movie?.title || '—',
-    amount: `₹${p.totalAmount}`,
-    paymentId: p.razorpayPaymentId || 'N/A (legacy)',
-    date: new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+    id: p?._id || '—',
+    user: p?.user?.name || '—',
+    movie: p?.show?.movie?.title || '—',
+    amount: `₹${p?.totalAmount || 0}`,
+    paymentId: p?.razorpayPaymentId || 'N/A (legacy)',
+    date: p?.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
   }));
 
   const openAddMovie = () => {
@@ -254,32 +268,32 @@ export default function AdminDashboard() {
     setSavingMovie(true);
     try {
       const cast = movieForm.castText
-  .split('\n')
-  .map((line) => line.trim())
-  .filter(Boolean)
-  .map((line) => {
-    const firstColon = line.indexOf(':');
-    const secondColon = line.indexOf(':', firstColon + 1);
-    const name = firstColon === -1 ? line : line.slice(0, firstColon).trim();
-    const role = firstColon === -1 ? 'Actor' : (secondColon === -1 ? line.slice(firstColon + 1).trim() : line.slice(firstColon + 1, secondColon).trim());
-    const img = secondColon === -1 ? '' : line.slice(secondColon + 1).trim();
-    return { name: name || 'Unknown', role: role || 'Actor', img };
-  });
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const firstColon = line.indexOf(':');
+          const secondColon = line.indexOf(':', firstColon + 1);
+          const name = firstColon === -1 ? line : line.slice(0, firstColon).trim();
+          const role = firstColon === -1 ? 'Actor' : (secondColon === -1 ? line.slice(firstColon + 1).trim() : line.slice(firstColon + 1, secondColon).trim());
+          const img = secondColon === -1 ? '' : line.slice(secondColon + 1).trim();
+          return { name: name || 'Unknown', role: role || 'Actor', img };
+        });
       const payload = { ...movieForm, cast };
       delete payload.castText;
 
       if (editingMovieId) {
         const updated = await updateMovieAdmin(editingMovieId, payload);
         setMovies((prev) => prev.map((m) => (m._id === editingMovieId ? { ...m, ...updated } : m)));
-        showxToast.adminSuccess('Movie updated');
+        showxToast.adminSuccess('Movie registry synchronized');
       } else {
         const created = await createMovieAdmin(payload);
         setMovies((prev) => [...prev, created]);
-        showxToast.adminSuccess('Movie added');
+        showxToast.adminSuccess('Movie record mapped safely');
       }
       setShowMovieForm(false);
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Save failed');
+      showxToast.adminError(err?.response?.data?.message || 'Save execution tracking failed');
     } finally {
       setSavingMovie(false);
     }
@@ -291,9 +305,9 @@ export default function AdminDashboard() {
     try {
       await deleteMovieAdmin(movie.id);
       setMovies((prev) => prev.filter((m) => m._id !== movie.id));
-      showxToast.adminSuccess('Movie deleted');
+      showxToast.adminSuccess('Movie trace purged');
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Delete failed');
+      showxToast.adminError(err?.response?.data?.message || 'Purge command failed');
     }
   };
 
@@ -311,7 +325,7 @@ export default function AdminDashboard() {
       name: theatre.name || '',
       location: theatre.location || '',
       city: theatre.city || '',
-      formats: (theatre.formats || []).join(', '),
+      formats: Array.isArray(theatre.formats) ? theatre.formats.join(', ') : '',
     });
     setShowTheatreForm(true);
   };
@@ -329,15 +343,15 @@ export default function AdminDashboard() {
       if (editingTheatreId) {
         const updated = await updateTheatreAdmin(editingTheatreId, payload);
         setTheatres((prev) => prev.map((t) => (t._id === editingTheatreId ? { ...t, ...updated } : t)));
-        showxToast.adminSuccess('Theatre updated');
+        showxToast.adminSuccess('Theatre configurations locked');
       } else {
         const created = await createTheatreAdmin(payload);
         setTheatres((prev) => [...prev, created]);
-        showxToast.adminSuccess('Theatre added');
+        showxToast.adminSuccess('Theatre node appended');
       }
       setShowTheatreForm(false);
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Save failed');
+      showxToast.adminError(err?.response?.data?.message || 'Theatre compilation matrix abort');
     } finally {
       setSavingTheatre(false);
     }
@@ -349,9 +363,9 @@ export default function AdminDashboard() {
     try {
       await deleteTheatreAdmin(theatre.id);
       setTheatres((prev) => prev.filter((t) => t._id !== theatre.id));
-      showxToast.adminSuccess('Theatre deleted');
+      showxToast.adminSuccess('Theatre module disconnected');
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Delete failed');
+      showxToast.adminError(err?.response?.data?.message || 'Purge trace reject');
     }
   };
 
@@ -389,16 +403,16 @@ export default function AdminDashboard() {
       };
       if (editingShowId) {
         await updateShowAdmin(editingShowId, payload);
-        showxToast.adminSuccess('Show updated');
+        showxToast.adminSuccess('Performance schedule aligned');
       } else {
         await createShowAdmin(payload);
-        showxToast.adminSuccess('Show added');
+        showxToast.adminSuccess('Performance track registered');
       }
       setShowShowForm(false);
       const refreshed = await fetchAllShowsAdmin();
       setShows(refreshed);
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Save failed');
+      showxToast.adminError(err?.response?.data?.message || 'Schedule configuration failure');
     } finally {
       setSavingShow(false);
     }
@@ -410,9 +424,9 @@ export default function AdminDashboard() {
     try {
       await deleteShowAdmin(show.id);
       setShows((prev) => prev.filter((s) => s._id !== show.id));
-      showxToast.adminSuccess('Show deleted');
+      showxToast.adminSuccess('Showtime slot cleared');
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Delete failed');
+      showxToast.adminError(err?.response?.data?.message || 'Clear log request rejected');
     }
   };
 
@@ -420,9 +434,9 @@ export default function AdminDashboard() {
     try {
       await updateUserRole(userId, newRole);
       setUsers((prev) => prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u)));
-      showxToast.adminSuccess('User role updated');
+      showxToast.adminSuccess('Account clearance tier assigned');
     } catch (err) {
-      showxToast.adminError(err?.response?.data?.message || 'Role update failed');
+      showxToast.adminError(err?.response?.data?.message || 'Access change sequence failed');
     }
   };
 
@@ -434,149 +448,171 @@ export default function AdminDashboard() {
     payments: { columns: ["ID", "User", "Movie", "Amount", "Payment ID", "Date"], data: paymentRows },
   };
 
-  // Filters whichever tab's table is currently active by matching the
-  // search text against every value in each row (case-insensitive).
   const getFilteredTabData = () => {
     const config = tabConfig[activeTab];
     if (!config) return config;
-
     const query = searchQuery.trim().toLowerCase();
     if (!query) return config;
-
     const filteredData = config.data.filter((row) =>
       Object.values(row).some((value) =>
         String(value ?? '').toLowerCase().includes(query)
       )
     );
-
     return { ...config, data: filteredData };
   };
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white flex">
+    <div className={`min-h-screen flex selection:bg-[#FF9F00]/30 selection:text-white antialiased transition-colors duration-300 w-full overflow-hidden ${
+      isDarkMode ? "bg-[#060608] text-white" : "bg-[#FAFAF8] text-slate-800"
+    }`}>
       <Sidebar
         isExpanded={isSidebarExpanded}
         toggleSidebar={() => setIsSidebarExpanded(!isSidebarExpanded)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        isDarkMode={true}
       />
 
-      <main className="flex-grow flex flex-col h-screen overflow-hidden">
-        <header className="h-20 border-b border-white/[0.05] flex items-center px-10 justify-between shrink-0 bg-[#060608]/50 backdrop-blur-md">
-          <h1 className="text-[10px] font-black tracking-[0.2em] uppercase text-[#FF9F00]">{activeTab} Console</h1>
+      <main className={`flex-grow flex flex-col h-screen overflow-hidden bg-gradient-to-br ${
+        isDarkMode ? "from-[#060608] via-[#08080c] to-[#0b0c10]" : "from-[#FAFAF8] via-[#F5F3EC] to-[#EAE7DC]"
+      }`}>
+        
+        {/* --- PREMIUM NAVIGATION CONTROL PANEL --- */}
+        <header className={`h-20 border-b flex items-center px-10 justify-between shrink-0 backdrop-blur-xl z-30 transition-all ${
+          isDarkMode ? "bg-[#060608]/40 border-white/[0.04]" : "bg-[#FAFAF8]/60 border-stone-200/60 shadow-sm"
+        }`}>
+          <div className="space-y-0.5">
+            <h1 className="text-[10px] font-black font-mono tracking-[0.25em] uppercase text-[#FF9F00] flex items-center gap-1.5">
+              <Layers size={11} /> {activeTab} Console Node
+            </h1>
+            <p className={`text-[10px] font-medium hidden sm:block ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>
+              {timeGreeting}, Admin — System metrics running nominal.
+            </p>
+          </div>
+
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 bg-[#111114] px-4 py-2 rounded-xl border border-white/[0.05] focus-within:border-[#FF9F00]/50 transition-all">
-              <Search size={14} className="text-slate-600" />
+            <button 
+              onClick={toggleTheme}
+              aria-label="Toggle system layout theme alignment"
+              className={`p-2 rounded-xl border flex items-center justify-center transition-all cursor-pointer outline-none hover:scale-105 ${
+                isDarkMode 
+                  ? "bg-[#111114]/80 border-white/[0.04] text-amber-400 hover:text-amber-300" 
+                  : "bg-white border-stone-200 text-stone-700 shadow-sm hover:border-amber-500/30"
+              }`}
+            >
+              {isDarkMode ? <Sun size={14} strokeWidth={2.5} /> : <Moon size={14} strokeWidth={2.5} />}
+            </button>
+
+            <div className={`flex items-center gap-2.5 px-4 py-2 rounded-xl border shadow-inner transition-all ${
+              isDarkMode ? "bg-[#111114]/80 border-white/[0.04] focus-within:border-[#FF9F00]/40" : "bg-white border-stone-200 focus-within:border-[#FF9F00]/50"
+            }`}>
+              <Search size={14} className="text-slate-500" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search data..."
-                className="bg-transparent text-[10px] font-bold text-white outline-none w-32"
+                placeholder="Filter index rows..."
+                className={`bg-transparent text-[11px] font-medium outline-none w-36 placeholder-slate-500 font-mono ${isDarkMode ? "text-white" : "text-slate-800"}`}
               />
             </div>
+
             <div className="relative">
-              <button onClick={handleNotifBellClick} className="relative cursor-pointer group bg-transparent border-none p-0">
+              <button onClick={handleNotifBellClick} className="relative cursor-pointer group bg-transparent border-none p-1 focus:outline-none">
                 <Bell size={16} className="text-slate-500 group-hover:text-[#FF9F00] transition-colors" />
                 {unreadNotifCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[#FF9F00] text-black text-[8px] font-black flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[#FF9F00] text-black text-[8px] font-black flex items-center justify-center animate-pulse">
                     {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
                   </span>
                 )}
               </button>
-
-              {showNotifMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-[#111114] border border-white/[0.05] rounded-xl p-2 shadow-2xl z-50"
-                >
-                  <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Notifications
-                  </div>
-                  {adminNotifications.length === 0 ? (
-                    <p className="px-3 py-6 text-[10px] text-slate-500 text-center">No notifications yet.</p>
-                  ) : (
-                    <div className="space-y-1">
-                      {adminNotifications.map((n) => (
-                        <div key={n._id} className="px-3 py-2.5 rounded-lg hover:bg-white/[0.03]">
-                          <p className="text-[11px] font-bold text-white">{n.title}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">{n.message}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {showNotifMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    className={`absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto border backdrop-blur-xl rounded-xl p-2 shadow-2xl z-50 no-scrollbar ${
+                      isDarkMode ? "bg-[#111114]/95 border-white/[0.06]" : "bg-white/95 border-stone-200"
+                    }`}
+                  >
+                    <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-white/[0.02] mb-1 font-mono">System Notifications Array</div>
+                    {adminNotifications.length === 0 ? (
+                      <p className="px-3 py-6 text-[10px] text-slate-500 text-center font-mono">No telemetry nodes logged.</p>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {adminNotifications.map((n) => (
+                          <div key={n._id} className="px-3 py-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
+                            <p className={`text-[11px] font-bold ${isDarkMode ? "text-white" : "text-slate-800"}`}>{n.title}</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5 font-mono">{n.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+
             <div className="relative">
-              <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-2 cursor-pointer hover:bg-white/[0.03] p-1 rounded-lg transition-all">
-                <UserCircle size={24} className="text-[#FF9F00]" />
-                <ChevronDown size={14} className="text-slate-500" />
+              <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-1.5 cursor-pointer hover:bg-white/[0.03] px-2 py-1.5 rounded-xl border border-transparent transition-all">
+                <UserCircle size={20} className="text-[#FF9F00]" />
+                <ChevronDown size={12} className="text-slate-500" />
               </div>
-              {showProfileMenu && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute right-0 mt-3 w-40 bg-[#111114] border border-white/[0.05] rounded-xl p-2 shadow-2xl z-50">
-                  <button onClick={() => setActiveTab('settings')} className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-white rounded-lg"><Settings size={14} /> Settings</button>
-                  <button onClick={() => { showxToast.logout(); navigate('/login'); }} className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold text-red-500 hover:bg-red-500/5 rounded-lg"><LogOut size={14} /> Logout</button>
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {showProfileMenu && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    className={`absolute right-0 mt-3 w-44 border backdrop-blur-xl rounded-xl p-1.5 shadow-2xl z-50 font-mono text-[10px] ${
+                      isDarkMode ? "bg-[#111114]/95 border-white/[0.06]" : "bg-white/95 border-stone-200"
+                    }`}
+                  >
+                    <button onClick={() => { setActiveTab('settings'); setShowProfileMenu(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 font-bold hover:bg-white/[0.04] rounded-lg border-none bg-transparent text-left cursor-pointer ${isDarkMode ? "text-slate-400 hover:text-white" : "text-stone-600 hover:text-stone-950"}`}><Settings size={13} /> Console Settings</button>
+                    <div className="h-[1px] bg-white/[0.04] my-1" />
+                    <button onClick={() => { showxToast.logout(); navigate('/login'); }} className="w-full flex items-center gap-2.5 px-3 py-2 font-bold text-red-500 hover:bg-red-500/10 rounded-lg border-none bg-transparent text-left cursor-pointer"><LogOut size={13} /> Logout Session</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
 
-        <div className="flex-grow p-10 overflow-y-auto">
+        {/* --- DYNAMIC RENDER ROUTE VIEW --- */}
+        <div className="flex-grow p-10 overflow-y-auto no-scrollbar relative z-10">
           <AnimatePresence mode="wait">
             {loading ? (
               <div className="space-y-8"><CardSkeleton /><TableSkeleton /></div>
             ) : (
-              <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
                 {activeTab === 'dashboard' && (
                   <>
-                    <StatsGrid isDarkMode={true} stats={stats} />
-                    <DashboardCharts isDarkMode={true} data={weeklyTrend} />
+                    <StatsGrid stats={stats} />
+                    <DashboardCharts data={weeklyTrend} />
                   </>
                 )}
 
                 {activeTab === 'settings' && (
                   <div className="max-w-4xl">
-                    <h2 className="text-xl font-black uppercase text-slate-500 mb-6">System Configuration</h2>
+                    <h2 className="text-sm font-black uppercase text-slate-500 tracking-wider font-mono mb-6">System Configuration Node</h2>
                     <SystemSettings />
                   </div>
                 )}
 
-                {activeTab === 'movies' && (
+                {['movies', 'theatres', 'shows'].includes(activeTab) && (
                   <div className="flex justify-end">
-                    <button onClick={openAddMovie} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest">
-                      <Plus size={14} /> Add Movie
-                    </button>
-                  </div>
-                )}
-
-                {activeTab === 'theatres' && (
-                  <div className="flex justify-end">
-                    <button onClick={openAddTheatre} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest">
-                      <Plus size={14} /> Add Theatre
-                    </button>
-                  </div>
-                )}
-
-                {activeTab === 'shows' && (
-                  <div className="flex justify-end">
-                    <button onClick={openAddShow} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest">
-                      <Plus size={14} /> Add Show
-                    </button>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} 
+                      onClick={activeTab === 'movies' ? openAddMovie : activeTab === 'theatres' ? openAddTheatre : openAddShow}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest cursor-pointer border-none shadow-md shadow-[#FF9F00]/10"
+                    >
+                      <Plus size={14} strokeWidth={2.5} /> Add {activeTab.slice(0, -1)}
+                    </motion.button>
                   </div>
                 )}
 
                 {activeTab === 'users' && (
-                  <UsersTable users={users} isDarkMode={true} onRoleChange={handleRoleChange} />
+                  <UsersTable users={users} onRoleChange={handleRoleChange} />
                 )}
 
                 {tabConfig[activeTab] && (
                   <DataTable
                     columns={getFilteredTabData().columns}
                     data={getFilteredTabData().data}
-                    isDarkMode={true}
                     onDelete={tabConfig[activeTab].onDelete}
                     onEdit={tabConfig[activeTab].onEdit}
                   />
@@ -586,91 +622,59 @@ export default function AdminDashboard() {
           </AnimatePresence>
         </div>
 
-        <footer className="h-16 border-t border-white/[0.05] flex items-center px-10 justify-between bg-[#060608] shrink-0">
-          <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-600">
-            <div className="flex items-center gap-2"><Activity size={12} className="text-emerald-500" /> System Online</div>
-            <div className="flex items-center gap-2"><Server size={12} className="text-blue-500" /> Latency: 24ms</div>
+        {/* --- SOLID DEEP OBSIDIAN BLACK METRICS FOOTER --- */}
+        <footer className="h-16 border-t border-neutral-900 flex items-center px-10 justify-between bg-neutral-950 shrink-0 z-20 transition-colors duration-300">
+          <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-400 font-mono">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" /> 
+              Telemetry: Nominal
+            </div>
+            <div className="flex items-center gap-2"><Server size={12} className="text-amber-500/80" /> Core Gateway: 24ms</div>
+            <div className="hidden md:flex items-center gap-1.5 text-slate-500"><RefreshCw size={11} /> Next Sync: {lastSyncTime}</div>
           </div>
-          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-700 uppercase tracking-widest">
+          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
             <Clock size={12} /> {currentTime} | Showx Enterprise © 2026
           </div>
         </footer>
       </main>
 
+      {/* --- FORM ENTRY DIALOG WRAPPERS --- */}
       <AnimatePresence>
         {showMovieForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
             <motion.form
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
               onSubmit={handleSaveMovie}
-              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4"
+              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl text-white"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-black uppercase text-[#FF9F00]">{editingMovieId ? 'Edit Movie' : 'Add Movie'}</h3>
-                <button type="button" onClick={() => setShowMovieForm(false)} className="text-slate-500 hover:text-white"><X size={18} /></button>
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#FF9F00] font-mono">{editingMovieId ? 'Edit Movie Entry' : 'Add Movie Hub Node'}</h3>
+                <button type="button" onClick={() => setShowMovieForm(false)} className="text-slate-500 hover:text-white bg-transparent border-none cursor-pointer"><X size={18} /></button>
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Category</label>
-                <select
-                  required
-                  value={movieForm.type}
-                  onChange={(e) => setMovieForm((prev) => ({ ...prev, type: e.target.value }))}
-                  className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50"
-                >
-                  <option value="movie">Movie</option>
-                  <option value="stream">Stream</option>
-                  <option value="events">Event</option>
-                  <option value="plays">Play</option>
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Category Tiers</label>
+                <select required value={movieForm.type} onChange={(e) => setMovieForm((prev) => ({ ...prev, type: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2.5 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-medium">
+                  <option value="movie">Movie</option><option value="stream">Stream</option><option value="events">Event</option><option value="plays">Play</option>
                 </select>
               </div>
-
               {['title', 'genre', 'language', 'rating', 'poster', 'duration', 'description'].map((field) => (
                 <div key={field} className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-500">{field}</label>
-                  <input
-                    required={field !== 'rating'}
-                    value={movieForm[field]}
-                    onChange={(e) => setMovieForm((prev) => ({ ...prev, [field]: e.target.value }))}
-                    className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50"
-                  />
+                  <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">{field}</label>
+                  <input required={field !== 'rating'} value={movieForm[field]} onChange={(e) => setMovieForm((prev) => ({ ...prev, [field]: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" />
                 </div>
               ))}
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Hero Banner Focus (crop position)</label>
-                <select
-                  value={movieForm.heroFocusY}
-                  onChange={(e) => setMovieForm((prev) => ({ ...prev, heroFocusY: e.target.value }))}
-                  className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50"
-                >
-                  <option value="top">Top</option>
-                  <option value="20%">Upper (20%)</option>
-                  <option value="center">Center</option>
-                  <option value="70%">Lower (70%)</option>
-                  <option value="bottom">Bottom</option>
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Hero Focus</label>
+                <select value={movieForm.heroFocusY} onChange={(e) => setMovieForm((prev) => ({ ...prev, heroFocusY: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2.5 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-medium">
+                  <option value="top">Top</option><option value="20%">Upper (20%)</option><option value="center">Center</option><option value="70%">Lower (70%)</option><option value="bottom">Bottom</option>
                 </select>
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">
-                  Cast (one per line: Name:Role:ImageURL)
-                </label>
-                <textarea
-                  rows={4}
-                  value={movieForm.castText}
-                  onChange={(e) => setMovieForm((prev) => ({ ...prev, castText: e.target.value }))}
-                  placeholder={"John Doe:Lead Actor:https://...\nJane Smith:Supporting:https://..."}
-                  className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50 font-mono"
-                />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Cast (Name:Role:ImageURL)</label>
+                <textarea rows={4} value={movieForm.castText} onChange={(e) => setMovieForm((prev) => ({ ...prev, castText: e.target.value }))} placeholder={"John Doe:Lead Actor:https://...\nJane Smith:Supporting:https://..."} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono no-scrollbar" />
               </div>
-
-              <button
-                type="submit"
-                disabled={savingMovie}
-                className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-              >
-                {savingMovie ? 'Saving...' : editingMovieId ? 'Update Movie' : 'Create Movie'}
+              <button type="submit" disabled={savingMovie} className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50 cursor-pointer shadow-md shadow-[#FF9F00]/10 border-none">
+                {savingMovie ? 'Syncing data...' : editingMovieId ? 'Update Master Node' : 'Initialize Node'}
               </button>
             </motion.form>
           </motion.div>
@@ -679,36 +683,34 @@ export default function AdminDashboard() {
 
       <AnimatePresence>
         {showTheatreForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
             <motion.form
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
               onSubmit={handleSaveTheatre}
-              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4"
+              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md shadow-2xl space-y-4 text-white"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-black uppercase text-[#FF9F00]">{editingTheatreId ? 'Edit Theatre' : 'Add Theatre'}</h3>
-                <button type="button" onClick={() => setShowTheatreForm(false)} className="text-slate-500 hover:text-white"><X size={18} /></button>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">name</label>
-                <input required value={theatreForm.name} onChange={(e) => setTheatreForm((prev) => ({ ...prev, name: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#FF9F00] font-mono">{editingTheatreId ? 'Modify Theatre Node' : 'Append Theatre Matrix'}</h3>
+                <button type="button" onClick={() => setShowTheatreForm(false)} className="text-slate-500 hover:text-white bg-transparent border-none cursor-pointer"><X size={18} /></button>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">location</label>
-                <input required value={theatreForm.location} onChange={(e) => setTheatreForm((prev) => ({ ...prev, location: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">name</label>
+                <input required value={theatreForm.name} onChange={(e) => setTheatreForm((prev) => ({ ...prev, name: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">city</label>
-                <input required value={theatreForm.city} onChange={(e) => setTheatreForm((prev) => ({ ...prev, city: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">location</label>
+                <input required value={theatreForm.location} onChange={(e) => setTheatreForm((prev) => ({ ...prev, location: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">formats (comma separated)</label>
-                <input value={theatreForm.formats} onChange={(e) => setTheatreForm((prev) => ({ ...prev, formats: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">city</label>
+                <input required value={theatreForm.city} onChange={(e) => setTheatreForm((prev) => ({ ...prev, city: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" />
               </div>
-
-              <button type="submit" disabled={savingTheatre} className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50">
-                {savingTheatre ? 'Saving...' : editingTheatreId ? 'Update Theatre' : 'Create Theatre'}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">formats (comma split)</label>
+                <input value={theatreForm.formats} onChange={(e) => setTheatreForm((prev) => ({ ...prev, formats: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono" />
+              </div>
+              <button type="submit" disabled={savingTheatre} className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50 cursor-pointer shadow-md shadow-[#FF9F00]/10 border-none">
+                {savingTheatre ? 'Syncing matrix logs...' : editingTheatreId ? 'Commit Modifications' : 'Commit Matrix Entry'}
               </button>
             </motion.form>
           </motion.div>
@@ -717,79 +719,56 @@ export default function AdminDashboard() {
 
       <AnimatePresence>
         {showShowForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
             <motion.form
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
               onSubmit={handleSaveShow}
-              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4"
+              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl no-scrollbar text-white"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-black uppercase text-[#FF9F00]">{editingShowId ? 'Edit Show' : 'Add Show'}</h3>
-                <button type="button" onClick={() => setShowShowForm(false)} className="text-slate-500 hover:text-white"><X size={18} /></button>
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#FF9F00] font-mono">{editingShowId ? 'Edit Performance Show' : 'Add Show Time Allocation'}</h3>
+                <button type="button" onClick={() => setShowShowForm(false)} className="text-slate-500 hover:text-white bg-transparent border-none cursor-pointer"><X size={18} /></button>
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Movie</label>
-                <select
-                  required
-                  value={showForm.movie}
-                  onChange={(e) => setShowForm((prev) => ({ ...prev, movie: e.target.value }))}
-                  className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50"
-                >
-                  <option value="">Select a movie</option>
-                  {movies.map((m) => (
-                    <option key={m._id} value={m._id}>{m.title}</option>
-                  ))}
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Movie Node</label>
+                <select required value={showForm.movie} onChange={(e) => setShowForm((prev) => ({ ...prev, movie: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2.5 text-xs text-white outline-none focus:border-[#FF9F00]/50">
+                  <option value="">Select allocation target...</option>
+                  {movies.map((m) => (<option key={m._id} value={m._id}>{m.title}</option>))}
                 </select>
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Theatre</label>
-                <select
-                  required
-                  value={showForm.theatre}
-                  onChange={(e) => setShowForm((prev) => ({ ...prev, theatre: e.target.value }))}
-                  className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50"
-                >
-                  <option value="">Select a theatre</option>
-                  {theatres.map((t) => (
-                    <option key={t._id} value={t._id}>{t.name}</option>
-                  ))}
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Theatre Nexus</label>
+                <select required value={showForm.theatre} onChange={(e) => setShowForm((prev) => ({ ...prev, theatre: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2.5 text-xs text-white outline-none focus:border-[#FF9F00]/50">
+                  <option value="">Select location node...</option>
+                  {theatres.map((t) => (<option key={t._id} value={t._id}>{t.name}</option>))}
                 </select>
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Screen (e.g. Screen 1)</label>
-                <input required value={showForm.screen} onChange={(e) => setShowForm((prev) => ({ ...prev, screen: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Screen Node ID</label>
+                <input required value={showForm.screen} onChange={(e) => setShowForm((prev) => ({ ...prev, screen: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" />
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Format (e.g. 2D, IMAX)</label>
-                <input required value={showForm.format} onChange={(e) => setShowForm((prev) => ({ ...prev, format: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Format Token</label>
+                <input required value={showForm.format} onChange={(e) => setShowForm((prev) => ({ ...prev, format: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" />
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Show Date</label>
-                <input required type="date" value={showForm.showDate} onChange={(e) => setShowForm((prev) => ({ ...prev, showDate: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Show Date</label>
+                <input required type="date" value={showForm.showDate} onChange={(e) => setShowForm((prev) => ({ ...prev, showDate: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono" />
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Show Time (e.g. 18:00)</label>
-                <input required value={showForm.showTime} onChange={(e) => setShowForm((prev) => ({ ...prev, showTime: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Show Clock Time</label>
+                <input required value={showForm.showTime} onChange={(e) => setShowForm((prev) => ({ ...prev, showTime: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono" />
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Price (₹)</label>
-                <input required type="number" value={showForm.price} onChange={(e) => setShowForm((prev) => ({ ...prev, price: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Price Matrix (₹)</label>
+                <input required type="number" value={showForm.price} onChange={(e) => setShowForm((prev) => ({ ...prev, price: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono" />
               </div>
-
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-500">Total Seats</label>
-                <input required type="number" value={showForm.totalSeats} onChange={(e) => setShowForm((prev) => ({ ...prev, totalSeats: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF9F00]/50" />
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">Total Seats</label>
+                <input required type="number" value={showForm.totalSeats} onChange={(e) => setShowForm((prev) => ({ ...prev, totalSeats: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono" />
               </div>
-
-              <button type="submit" disabled={savingShow} className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50">
-                {savingShow ? 'Saving...' : editingShowId ? 'Update Show' : 'Create Show'}
+              <button type="submit" disabled={savingShow} className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50 cursor-pointer shadow-md shadow-[#FF9F00]/10 border-none">
+                {savingShow ? 'Compiling paths...' : editingShowId ? 'Push Parameter Changes' : 'Initialize Schedule Track'}
               </button>
             </motion.form>
           </motion.div>
