@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import razorpayInstance from "../config/razorpay.js";
 import Booking from "../models/Booking.js";
+import { createNotification } from "./notificationController.js";
 
 // @route   POST /api/payments/create-order
 // @access  Private
@@ -112,6 +113,24 @@ export const verifyPayment = async (req, res) => {
     booking.status = "confirmed";
     booking.razorpayPaymentId = razorpay_payment_id;
     await booking.save();
+
+    // Fire-and-forget notifications — one for the admin dashboard, one for
+    // the user's own notification list. These never block the response.
+    createNotification({
+      forAdmin: true,
+      type: "booking",
+      title: "New booking confirmed",
+      message: `A booking of ₹${booking.totalAmount} was just paid for and confirmed.`,
+      booking: booking._id,
+    });
+
+    createNotification({
+      user: booking.user,
+      type: "booking",
+      title: "Booking confirmed!",
+      message: `Your booking of ₹${booking.totalAmount} has been confirmed. Enjoy the show!`,
+      booking: booking._id,
+    });
 
     res.status(200).json({
       success: true,

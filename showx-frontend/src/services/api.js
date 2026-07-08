@@ -12,9 +12,10 @@ const simulateNetworkRequest = (dataResolver, delay = 200) => {
   });
 };
 
-export const fetchAllMovies = async () => {
+export const fetchAllMovies = async (search = '') => {
   try {
-    const res = await axiosInstance.get('/movies');
+    const query = search ? `/movies?search=${encodeURIComponent(search)}` : '/movies';
+    const res = await axiosInstance.get(query);
     return res.data.movies
       .filter((item) => item.type === 'movie' || !item.type)
       .map((item) => ({ ...item, id: item._id }));
@@ -26,12 +27,10 @@ export const fetchAllMovies = async () => {
 
 export const fetchItemsByType = async (type) => {
   try {
-    const res = await axiosInstance.get('/movies');
-    return res.data.movies
-      .filter((item) => item.type === type)
-      .map((item) => ({ ...item, id: item._id }));
+    const res = await axiosInstance.get(`/movies?type=${type}`);
+    return res.data.movies.map((item) => ({ ...item, id: item._id }));
   } catch (error) {
-    console.error(`Error fetching ${type} items:`, error);
+    console.error("Error fetching items by type:", error);
     return [];
   }
 };
@@ -49,10 +48,9 @@ export const fetchItemById = async (id) => {
 export const fetchMovieById = fetchItemById;
 
 export const fetchBookedSeats = () => {
-  return simulateNetworkRequest(() => ['B-10', 'C-8', 'C-9', 'C-10']);
+  return simulateNetworkRequest(() => []);
 };
 
-// --- Logged-in user's own bookings (for Profile page Booking History tab) ---
 export const fetchMyBookings = async () => {
   try {
     const res = await axiosInstance.get('/bookings/my-bookings');
@@ -63,7 +61,6 @@ export const fetchMyBookings = async () => {
   }
 };
 
-// --- Real shows for a specific movie (Movie Details page booking panel) ---
 export const fetchShowsForMovie = async (movieId) => {
   try {
     const res = await axiosInstance.get(`/shows?movieId=${movieId}`);
@@ -74,14 +71,12 @@ export const fetchShowsForMovie = async (movieId) => {
   }
 };
 
-// --- NEW OPERATIONALLY DYNAMIC METHOD ---
-// This uses the environment variables to connect directly to your live backend server endpoints.
 export const fetchLiveCollectionNode = async (endpointPath) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/${endpointPath}`);
-    return await response.json();
+    const res = await axiosInstance.get(endpointPath);
+    return res.data;
   } catch (error) {
-    console.error("Showx Core Database connectivity failure using endpoint address:", error);
+    console.error("Error fetching live collection node:", error);
     return null;
   }
 };

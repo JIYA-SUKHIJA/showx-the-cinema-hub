@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { showxToast } from '../utils/toastConfig';
+import axiosInstance from '../services/axiosInstance';
 import Sidebar from '../components/Admin/Sidebar';
 import StatsGrid from '../components/Admin/StatsGrid';
 import DashboardCharts from '../components/Admin/DashboardCharts';
@@ -71,6 +72,9 @@ export default function AdminDashboard() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [adminNotifications, setAdminNotifications] = useState([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   const [stats, setStats] = useState(null);
   const [weeklyTrend, setWeeklyTrend] = useState([]);
@@ -100,6 +104,35 @@ export default function AdminDashboard() {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Load admin notifications once on mount.
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await axiosInstance.get('/notifications/admin');
+        setAdminNotifications(res.data.notifications);
+        setUnreadNotifCount(res.data.unreadCount);
+      } catch (err) {
+        // Non-critical — dashboard still works without notifications.
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  const handleNotifBellClick = async () => {
+    const opening = !showNotifMenu;
+    setShowNotifMenu(opening);
+
+    if (opening && unreadNotifCount > 0) {
+      try {
+        await axiosInstance.put('/notifications/read-all');
+        setUnreadNotifCount(0);
+        setAdminNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      } catch (err) {
+        // Non-critical.
+      }
+    }
+  };
 
   const loadTabData = async () => {
     setLoading(true);
@@ -401,6 +434,24 @@ export default function AdminDashboard() {
     payments: { columns: ["ID", "User", "Movie", "Amount", "Payment ID", "Date"], data: paymentRows },
   };
 
+  // Filters whichever tab's table is currently active by matching the
+  // search text against every value in each row (case-insensitive).
+  const getFilteredTabData = () => {
+    const config = tabConfig[activeTab];
+    if (!config) return config;
+
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return config;
+
+    const filteredData = config.data.filter((row) =>
+      Object.values(row).some((value) =>
+        String(value ?? '').toLowerCase().includes(query)
+      )
+    );
+
+    return { ...config, data: filteredData };
+  };
+
   return (
     <div className="min-h-screen bg-[#060608] text-white flex">
       <Sidebar
@@ -409,7 +460,6 @@ export default function AdminDashboard() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isDarkMode={true}
-        logout={() => { showxToast.logout(); setTimeout(() => navigate('/login'), 1500); }}
       />
 
       <main className="flex-grow flex flex-col h-screen overflow-hidden">
@@ -425,9 +475,39 @@ export default function AdminDashboard() {
                 className="bg-transparent text-[10px] font-bold text-white outline-none w-32"
               />
             </div>
-            <div className="relative cursor-pointer group">
-              <Bell size={16} className="text-slate-500 hover:text-[#FF9F00] transition-colors" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#FF9F00] rounded-full animate-ping" />
+            <div className="relative">
+              <button onClick={handleNotifBellClick} className="relative cursor-pointer group bg-transparent border-none p-0">
+                <Bell size={16} className="text-slate-500 group-hover:text-[#FF9F00] transition-colors" />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[#FF9F00] text-black text-[8px] font-black flex items-center justify-center">
+                    {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-[#111114] border border-white/[0.05] rounded-xl p-2 shadow-2xl z-50"
+                >
+                  <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    Notifications
+                  </div>
+                  {adminNotifications.length === 0 ? (
+                    <p className="px-3 py-6 text-[10px] text-slate-500 text-center">No notifications yet.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {adminNotifications.map((n) => (
+                        <div key={n._id} className="px-3 py-2.5 rounded-lg hover:bg-white/[0.03]">
+                          <p className="text-[11px] font-bold text-white">{n.title}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{n.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </div>
             <div className="relative">
               <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-2 cursor-pointer hover:bg-white/[0.03] p-1 rounded-lg transition-all">
@@ -494,8 +574,8 @@ export default function AdminDashboard() {
 
                 {tabConfig[activeTab] && (
                   <DataTable
-                    columns={tabConfig[activeTab].columns}
-                    data={tabConfig[activeTab].data}
+                    columns={getFilteredTabData().columns}
+                    data={getFilteredTabData().data}
                     isDarkMode={true}
                     onDelete={tabConfig[activeTab].onDelete}
                     onEdit={tabConfig[activeTab].onEdit}

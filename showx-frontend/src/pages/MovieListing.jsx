@@ -1,8 +1,8 @@
 // src/pages/MovieListing.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Sparkles, LayoutGrid } from 'lucide-react';
+import { Flame, Sparkles, LayoutGrid, SearchX } from 'lucide-react';
 import MovieCard from '../components/molecules/MovieCard';
 import { useTheme } from '../context/ThemeContext';
 import { MovieCardSkeleton } from '../components/atoms/Skeletons';
@@ -11,17 +11,21 @@ import { fetchAllMovies } from '../services/api';
 export default function MovieListing() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
+
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [loading, setLoading] = useState(true);
   const [allMovies, setAllMovies] = useState([]);
 
+  // Re-fetch whenever the ?search= query param in the URL changes —
+  // this is what actually connects the search bar to this page.
   useEffect(() => {
     setLoading(true);
-    fetchAllMovies()
+    fetchAllMovies(searchQuery)
       .then((data) => setAllMovies(data))
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchQuery]);
 
   const genres = ['All', ...Array.from(new Set(allMovies.map((m) => m.genre).filter(Boolean)))];
   const filteredMovies = selectedGenre === 'All' 
@@ -43,7 +47,11 @@ export default function MovieListing() {
             <Flame size={12} /> Live Box Office Catalog
           </div>
           <h1 className={`text-4xl md:text-5xl font-black tracking-tight leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Discover Your Next<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300">Cinematic Tour</span>
+            {searchQuery ? (
+              <>Results for <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300">"{searchQuery}"</span></>
+            ) : (
+              <>Discover Your Next<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300">Cinematic Tour</span></>
+            )}
           </h1>
           <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
             Reserve active multiplex seats instantly. Access high-resolution theater grids across all premium formats including IMAX, Dolby Atmos, and 4K Spatial Sound clusters.
@@ -81,15 +89,23 @@ export default function MovieListing() {
         <div className="flex items-center gap-2 mb-6">
           <Sparkles size={16} className="text-gold" />
           <h2 className={`text-xl font-black tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Curated Showtimes Right Now
+            {searchQuery ? 'Search Results' : 'Curated Showtimes Right Now'}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            Array.from({ length: filteredMovies.length || 3 }).map((_, idx) => (
+            Array.from({ length: 3 }).map((_, idx) => (
               <MovieCardSkeleton key={idx} />
             ))
+          ) : filteredMovies.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+              <SearchX size={40} className="text-slate-400 mb-3" />
+              <p className={`text-sm font-bold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+                No movies found{searchQuery ? ` for "${searchQuery}"` : ''}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Try a different search term or browse all movies.</p>
+            </div>
           ) : (
             filteredMovies.map((movie) => (
               <motion.div key={movie.id} layout>

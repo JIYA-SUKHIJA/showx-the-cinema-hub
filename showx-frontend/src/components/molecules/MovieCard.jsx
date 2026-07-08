@@ -82,7 +82,6 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
       {/* Media Cover Layer */}
       <div onClick={handleNavigateToBriefing} className="relative w-full aspect-[16/10] sm:aspect-[4/3] bg-slate-950 overflow-hidden cursor-pointer">
         {!imgError ? (
-          /* Step 6: Accelerated Cinematic Lazy Loading Fade Injected here */
           <motion.img
             initial={{ opacity: 0, filter: "blur(4px)" }}
             animate={{ opacity: 1, filter: "blur(0px)" }}
@@ -151,6 +150,15 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
           {isEventOrPlay && item.venue && (
             <p className="text-[11px] text-slate-500 flex items-center gap-1 pt-1 truncate">
               <MapPin size={11} className="text-amber-500 shrink-0" /> {item.venue}
+            </p>
+          )}
+
+          {/* Short description preview — clamped to 2 lines so card height stays consistent */}
+          {item.description && (
+            <p className={`text-[11px] leading-relaxed line-clamp-2 pt-1 ${
+              isDarkMode ? "text-slate-500" : "text-slate-500"
+            }`}>
+              {item.description}
             </p>
           )}
         </div>

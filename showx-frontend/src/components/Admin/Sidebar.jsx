@@ -1,8 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Film, Ticket, Building, User, CreditCard, Settings, LogOut, ChevronLeft, Clapperboard, CalendarClock } from 'lucide-react';
+import { LayoutDashboard, Film, Ticket, Building, User, CreditCard, Settings, ChevronLeft, Clapperboard, CalendarClock, Home } from 'lucide-react';
 
-export default function Sidebar({ isExpanded, toggleSidebar, activeTab, setActiveTab, logout }) {
+export default function Sidebar({ isExpanded, toggleSidebar, activeTab, setActiveTab }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'movies', label: 'Movie Hub', icon: Film },
@@ -46,10 +47,15 @@ export default function Sidebar({ isExpanded, toggleSidebar, activeTab, setActiv
         })}
       </nav>
 
-      <button onClick={logout} className="flex items-center gap-4 px-4 py-3 text-xs font-bold text-red-500 hover:bg-red-500/5 rounded-xl transition-all">
-        <LogOut size={18} />
-        {isExpanded && <span>Close Session</span>}
-      </button>
+      {/* Back to Home is the only exit option here — Logout already lives
+          in the header's profile dropdown, so we don't duplicate it. */}
+      <Link
+        to="/"
+        className="flex items-center gap-4 px-4 py-3 text-xs font-bold text-slate-500 hover:text-[#FF9F00] hover:bg-white/[0.03] rounded-xl transition-all"
+      >
+        <Home size={18} />
+        {isExpanded && <span>Back to Home</span>}
+      </Link>
     </motion.aside>
   );
 }

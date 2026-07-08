@@ -30,8 +30,6 @@ export const getMovies = async (req, res) => {
     }
 
     if (genre) {
-      // genre is now a plain string field, so we use a case-insensitive
-      // partial match instead of array $in.
       filter.genre = { $regex: genre, $options: "i" };
     }
 
@@ -126,6 +124,60 @@ export const deleteMovie = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error deleting movie",
+      error: error.message,
+    });
+  }
+};
+
+// @route   GET /api/movies/releases
+// @desc    All released movies (releaseDate today or in the past), newest first
+// @access  Public
+export const getReleases = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const movies = await Movie.find({
+      isActive: true,
+      type: "movie",
+      $or: [{ releaseDate: { $lte: now } }, { releaseDate: null }],
+    }).sort({ releaseDate: -1, createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: movies.length,
+      movies,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching releases",
+      error: error.message,
+    });
+  }
+};
+
+// @route   GET /api/movies/upcoming
+// @desc    Movies with a releaseDate set in the future
+// @access  Public
+export const getUpcomingMovies = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const movies = await Movie.find({
+      isActive: true,
+      type: "movie",
+      releaseDate: { $gt: now },
+    }).sort({ releaseDate: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: movies.length,
+      movies,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching upcoming movies",
       error: error.message,
     });
   }

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Clapperboard, User, MapPin, ChevronDown, 
   Film, Building, Sparkles, ShieldCheck, Sun, Moon, 
-  LogOut, Ticket, HelpCircle, LogIn, Home
+  LogOut, Ticket, HelpCircle, LogIn, Home, Bell
 } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -19,6 +19,10 @@ export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [cities, setCities] = useState(['Karnal']);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({
@@ -45,6 +49,52 @@ export default function Navbar() {
     };
     fetchNavbarUser();
   }, []);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const res = await axiosInstance.get('/cities');
+        const cityNames = res.data.cities.map((c) => c.name);
+        if (cityNames.length > 0) {
+          setCities(cityNames);
+        }
+      } catch (err) {
+        // Keep the default ['Karnal'] fallback already in state.
+      }
+    };
+    fetchCities();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const endpoint = user.role === 'admin' ? '/notifications/admin' : '/notifications/my';
+        const res = await axiosInstance.get(endpoint);
+        setNotifications(res.data.notifications);
+        setUnreadCount(res.data.unreadCount);
+      } catch (err) {
+        // Fail silently — notifications are non-critical to page function.
+      }
+    };
+    fetchNotifications();
+  }, [isLoggedIn, user.role]);
+
+  const handleNotifOpen = async () => {
+    const opening = !isNotifOpen;
+    setIsNotifOpen(opening);
+
+    if (opening && unreadCount > 0) {
+      try {
+        await axiosInstance.put('/notifications/read-all');
+        setUnreadCount(0);
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      } catch (err) {
+        // Non-critical.
+      }
+    }
+  };
 
   const placeholders = [
     "Search for Movies...",
@@ -110,7 +160,6 @@ export default function Navbar() {
     navigate(`/movies?search=${encodeURIComponent(query)}`);
   };
 
-  const cities = ['Karnal', 'Delhi NCR', 'Mumbai', 'Bengaluru', 'Chandigarh'];
   const linkBaseStyle = "flex items-center gap-1.5 transition-all duration-300 relative py-1 px-1 rounded-md text-xs font-bold tracking-wide";
 
   return (
@@ -197,6 +246,7 @@ export default function Navbar() {
                           key={city}
                           onClick={() => {
                             setSelectedCity(city);
+                            setIsLocationOpen(false);
                           }}
                           className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer border-none bg-transparent ${
                             selectedCity === city ? "text-amber-600 bg-amber-500/10" : isDarkMode ? "text-slate-300" : "text-stone-600"
@@ -217,6 +267,63 @@ export default function Navbar() {
             >
               {isDarkMode ? <Sun size={15} strokeWidth={2.5} /> : <Moon size={15} strokeWidth={2.5} />}
             </button>
+
+            {isLoggedIn && (
+              <div className="relative">
+                <button
+                  onClick={handleNotifOpen}
+                  className={`relative p-2.5 rounded-xl border cursor-pointer ${
+                    isDarkMode ? "border-white/[0.06] bg-white/[0.02] text-slate-300" : "border-stone-200 bg-stone-50 text-stone-700"
+                  }`}
+                >
+                  <Bell size={15} strokeWidth={2.5} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center border-2 border-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {isNotifOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsNotifOpen(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        className={`absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto border rounded-2xl shadow-2xl z-20 ${
+                          isDarkMode ? "bg-slate-900 border-white/[0.06]" : "bg-white border-stone-200"
+                        }`}
+                      >
+                        <div className={`px-4 py-3 border-b font-black text-xs uppercase tracking-wide ${
+                          isDarkMode ? "border-white/[0.05] text-slate-400" : "border-stone-100 text-stone-500"
+                        }`}>
+                          Notifications
+                        </div>
+                        {notifications.length === 0 ? (
+                          <p className="px-4 py-6 text-xs text-slate-500 text-center">No notifications yet.</p>
+                        ) : (
+                          <div className="p-1.5 space-y-1">
+                            {notifications.map((n) => (
+                              <div
+                                key={n._id}
+                                className={`px-3 py-2.5 rounded-xl text-xs ${
+                                  isDarkMode ? "hover:bg-white/[0.04]" : "hover:bg-stone-50"
+                                }`}
+                              >
+                                <p className={`font-bold ${isDarkMode ? "text-white" : "text-stone-800"}`}>{n.title}</p>
+                                <p className="text-slate-500 mt-0.5">{n.message}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {isLoggedIn ? (
               <div className="relative">

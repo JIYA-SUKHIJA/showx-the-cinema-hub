@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Clock, Flame, Film, Loader2 } from 'lucide-react';
+import axiosInstance from '../../services/axiosInstance';
 
-// Sample dynamic mock data matching your database configuration
 const TRENDING_MOVIES = [
   { id: 1, title: "Welcome To The Jungle", genre: "Comedy • Adventure", rating: "8.4" },
   { id: 2, title: "Main Vaapas Aaunga", genre: "Drama • Musical", rating: "9.1" },
-  { id: 3, title: "Cocktail 2", genre: "Rom-Com • Hindi", rating: "8.0" }
-];
-
-const MOCK_SUGGESTIONS = [
-  { id: 1, title: "Welcome To The Jungle", year: "2026", type: "movie" },
-  { id: 2, title: "Main Vaapas Aaunga", year: "2026", type: "movie" },
-  { id: 3, title: "Cocktail 2", year: "2026", type: "movie" },
-  { id: 4, title: "Interstellar Odyssey", year: "4K Stream", type: "stream" },
-  { id: 5, title: "Jasmine Sandlas Live", year: "Concert", type: "event" }
+  { id: 3, title: "Project Hail Mary", genre: "Science Fiction", rating: "8.8" }
 ];
 
 export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
@@ -29,7 +21,6 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Focus input automatically when search opens
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus();
@@ -40,26 +31,36 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  // Handle auto-suggestions simulation with debouncing loader effect
+  // Real backend-connected auto-suggestions, debounced by 350ms so we
+  // don't fire a request on every keystroke.
   useEffect(() => {
     if (query.trim().length < 2) {
       setSuggestions([]);
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    const delayDebounce = setTimeout(() => {
-      const filtered = MOCK_SUGGESTIONS.filter(item =>
-        item.title.toLowerCase().includes(query.toLowerCase())
-      );
-      setSuggestions(filtered);
-      setIsLoading(false);
-    }, 300); // 300ms simulated network debounce delay
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await axiosInstance.get(`/movies?search=${encodeURIComponent(query)}`);
+        const results = (res.data.movies || []).map((m) => ({
+          id: m._id,
+          title: m.title,
+          year: m.releaseDate ? new Date(m.releaseDate).getFullYear() : '',
+          type: m.type || 'movie',
+        }));
+        setSuggestions(results);
+      } catch (err) {
+        setSuggestions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 350);
 
     return () => clearTimeout(delayDebounce);
   }, [query]);
 
-  // Keyboard Navigation handler loop (Up, Down, Enter, Escape)
   const handleKeyDown = (e) => {
     const totalItems = suggestions.length + history.length + TRENDING_MOVIES.length;
     if (totalItems === 0) return;
@@ -75,7 +76,6 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (activeIndex >= 0) {
-        // Find which item is currently focused and submit it
         let flatList = [...suggestions.map(s => s.title), ...history, ...TRENDING_MOVIES.map(t => t.title)];
         executeSearch(flatList[activeIndex]);
       } else if (query.trim()) {
@@ -87,7 +87,6 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
   const executeSearch = (searchQuery) => {
     if (!searchQuery.trim()) return;
     
-    // Add to history if unique
     const updatedHistory = [searchQuery, ...history.filter(h => h !== searchQuery)].slice(0, 5);
     setHistory(updatedHistory);
     localStorage.setItem('showx_search_history', JSON.stringify(updatedHistory));
@@ -108,15 +107,12 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-start justify-center pt-8 sm:pt-20 px-4">
-      {/* Background overlay click-away target */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Main Search Panel Card */}
       <div 
         ref={containerRef}
         className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200"
       >
-        {/* Input Bar Layer Container */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/5 bg-slate-900/50">
           <Search className="w-5 h-5 text-slate-400 shrink-0" />
           
@@ -142,10 +138,8 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
           ) : null}
         </div>
 
-        {/* --- DYNAMIC DROPDOWN VIEWS SYSTEM --- */}
         <div className="max-h-[60vh] overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
           
-          {/* View A: Auto-Suggestions List Panel */}
           {query.trim().length >= 2 && suggestions.length > 0 && (
             <div>
               <h4 className="text-[11px] font-black tracking-widest text-slate-500 uppercase mb-2 px-2">Suggestions</h4>
@@ -176,10 +170,8 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
             </div>
           )}
 
-          {/* View B: Default View (Recent Searches + Trending Cards) */}
           {query.trim().length < 2 && (
             <>
-              {/* History Deck Container */}
               {history.length > 0 && (
                 <div>
                   <h4 className="text-[11px] font-black tracking-widest text-slate-500 uppercase mb-2 px-2">Recent Searches</h4>
@@ -214,7 +206,6 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
                 </div>
               )}
 
-              {/* Trending Lists Column Layer */}
               <div>
                 <h4 className="text-[11px] font-black tracking-widest text-slate-500 uppercase mb-2 px-2 flex items-center gap-1">
                   <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" /> Trending Searches
@@ -248,7 +239,6 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
             </>
           )}
 
-          {/* Fallback View C: Query Active but Empty suggestions array result */}
           {query.trim().length >= 2 && suggestions.length === 0 && !isLoading && (
             <div className="text-center py-8 text-slate-500 text-xs font-medium">
               No results discovered matching "{query}"
@@ -257,7 +247,6 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
 
         </div>
 
-        {/* Footer Shortcut Panel Label Deck (Hidden on mobile viewports) */}
         <div className="hidden sm:flex items-center justify-between px-4 py-2 bg-slate-950/40 border-t border-white/5 text-[10px] font-medium text-slate-500">
           <div className="flex gap-4">
             <span><kbd className="bg-slate-800 px-1.5 py-0.5 rounded border border-white/5 text-slate-400 shadow-sm mr-1">↑↓</kbd> Navigate</span>

@@ -11,9 +11,18 @@ import showRoutes from "./routes/showRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import cityRoutes from "./routes/cityRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
+
+// Disable automatic ETag-based caching. Express adds ETags to every JSON
+// response by default; on GET routes with query params (like movie search)
+// this can cause the browser to receive a bare 304 "Not Modified" with no
+// body, which silently breaks endpoints that are expected to return fresh
+// data on every request.
+app.set('etag', false);
 
 app.use(helmet());
 
@@ -49,6 +58,8 @@ app.use("/api/shows", showRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/cities", cityRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
