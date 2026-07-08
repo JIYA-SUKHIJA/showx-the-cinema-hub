@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/atoms/Toast';
+import axiosInstance from '../services/axiosInstance';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const Register = () => {
     else if (!/\S+@\S+\.\S+/.test(formData.email)) tempErrors.email = "Please enter a valid email address";
     
     if (!formData.password) tempErrors.password = "Password is required";
-    else if (formData.password.length < 8) tempErrors.password = "Password must be at least 8 characters";
+    else if (formData.password.length < 6) tempErrors.password = "Password must be at least 6 characters";
     
     if (formData.password !== formData.confirmPassword) {
       tempErrors.confirmPassword = "Passwords do not match";
@@ -57,12 +58,16 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await axiosInstance.post('/auth/register', {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      });
       setToast({ message: "Registration successful! Forwarding to log in...", type: 'success' });
-      console.log("Register Committed Successfully", formData);
       setTimeout(() => navigate("/login"), 1200);
     } catch (err) {
-      setToast({ message: "Account creation failed. Please retry.", type: 'error' });
+      const message = err.response?.data?.message || "Account creation failed. Please retry.";
+      setToast({ message, type: 'error' });
     } finally {
       setIsLoading(false);
     }

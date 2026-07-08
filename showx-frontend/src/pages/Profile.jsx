@@ -5,12 +5,14 @@ import { useTheme } from '../context/ThemeContext';
 import { useBooking } from '../context/BookingContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, Mail, Phone, Shield, Ticket, Clapperboard, 
+  User, Mail, Phone, Shield, Ticket, 
   Camera, Check, X, Edit3, LogOut, Award, Calendar,
-  ChevronRight, Activity, CreditCard, Heart, MapPin, Settings, Star, ShieldCheck
+  ChevronRight, CreditCard, ShieldCheck
 } from 'lucide-react';
 import { ProfilePageSkeleton } from '../components/atoms/Skeletons';
 import { showxToast } from '../utils/toastConfig';
+import axiosInstance from '../services/axiosInstance';
+import { fetchMyBookings } from '../services/api';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,63 +20,108 @@ const Profile = () => {
   const { clearBookingSession } = useBooking();
 
   const [loading, setLoading] = useState(true);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [myBookings, setMyBookings] = useState([]);
 
   const [user, setUser] = useState({
-    name: "Jiya Mehra",
-    email: "jiya@gmail.com",
-    phone: "+91 999925XXXXX",
+    name: "",
+    email: "",
+    phone: "Not added yet",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&h=200&q=80",
-    joinDate: "October 2025",
-    membership: "Premium Elite",
-    totalBookings: 24,
-    initials: "JM",
-    cardNumber: "SHX •••• •••• 8824"
+    joinDate: "—",
+    membership: "Standard",
+    totalBookings: 0,
+    initials: "",
+    cardNumber: "SHX •••• •••• ----"
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({ ...user });
-  const [activeTab, setActiveTab] = useState('info'); 
-
-  const BOOKINGS_HISTORY = [
-    { id: "SHX-582910", movie: "Welcome To The Jungle", theater: "PVR Dolby Cinema: Centra Mall", seats: "Gold VIP A-5, A-6", timing: "Today, 08:00 PM", amount: "₹766.00", status: "Active" },
-    { id: "SHX-120494", movie: "Main Vaapas Aaunga", theater: "Wave Cinemas: Elante Hub", seats: "Standard C-11, C-12", timing: "18 Jun 2026", amount: "₹460.00", status: "Completed" }
-  ];
-
-  const FAVORITES_LIST = [
-    { title: "Welcome To The Jungle", type: "Movie", rating: "8.4", poster: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=300" },
-    { title: "Jasmine Sandlas Live", type: "Concert", rating: "9.5", poster: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?q=80&w=300" }
-  ];
-
-  const SAVED_CARDS = [
-    { type: "Visa", number: "•••• •••• •••• 4321", expiry: "12/28", holder: "JIYA MEHRA" }
-  ];
-
-  const SAVED_ADDRESSES = [
-    { type: "Home Base", detail: "House No. 412, Sector 13, Urban Estate, Karnal, Haryana - 132001" }
-  ];
+  const [activeTab, setActiveTab] = useState('info');
 
   useEffect(() => {
-    const skeletonTimer = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(skeletonTimer);
+    const fetchProfile = async () => {
+      try {
+        const res = await axiosInstance.get('/auth/profile');
+        const backendUser = res.data.user;
+        const joinDate = new Date(backendUser.createdAt).toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        });
+
+        const bookingsData = await fetchMyBookings();
+        const count = bookingsData.length;
+        const membership = count >= 10 ? 'Gold' : count >= 5 ? 'Silver' : 'Standard';
+
+        setUser((prev) => ({
+          ...prev,
+          name: backendUser.name,
+          email: backendUser.email,
+          joinDate,
+          totalBookings: count,
+          membership,
+          initials: backendUser.name
+            .split(' ')
+            .map((w) => w[0])
+            .join('')
+            .toUpperCase(),
+        }));
+        setMyBookings(bookingsData);
+      } catch (err) {
+        console.error("Could not load profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'bookings' && myBookings.length === 0) {
+      const loadBookings = async () => {
+        setBookingsLoading(true);
+        const data = await fetchMyBookings();
+        const count = data.length;
+        const membership = count >= 10 ? 'Gold' : count >= 5 ? 'Silver' : 'Standard';
+        setMyBookings(data);
+        setUser((prev) => ({ ...prev, totalBookings: count, membership }));
+        setBookingsLoading(false);
+      };
+      loadBookings();
+    }
+  }, [activeTab]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditedUser(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setUser({ ...editedUser });
-    setIsEditing(false);
-    showxToast.profileUpdated();
+    try {
+      const res = await axiosInstance.put('/auth/profile', {
+        name: editedUser.name,
+        email: editedUser.email,
+      });
+      setUser((prev) => ({ ...prev, ...res.data.user }));
+      setIsEditing(false);
+      showxToast.profileUpdated();
+    } catch (err) {
+      console.error("Profile update failed", err);
+    }
   };
 
-  const handleLogout = () => {
-    clearBookingSession();
-    sessionStorage.clear();
-    showxToast.logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (err) {
+      console.error("Logout call failed", err);
+    } finally {
+      clearBookingSession();
+      sessionStorage.clear();
+      showxToast.logout();
+      navigate("/login");
+    }
   };
 
   if (loading) {
@@ -120,7 +167,7 @@ const Profile = () => {
                 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-2 text-xs font-bold text-slate-400">
                   <span className="flex items-center gap-1.5"><Calendar size={13} className="text-amber-500" /> Member since {user.joinDate}</span>
-                  <span className="flex items-center gap-1.5"><Ticket size={13} className="text-amber-500" /> {user.totalBookings} Movies Watched</span>
+                  <span className="flex items-center gap-1.5"><Ticket size={13} className="text-amber-500" /> {user.totalBookings} Bookings</span>
                 </div>
               </div>
             </div>
@@ -164,9 +211,6 @@ const Profile = () => {
               {[
                 { id: 'info', label: 'Personal Profile', icon: User },
                 { id: 'bookings', label: 'Booking History', icon: Ticket },
-                { id: 'wishlist', label: 'Wishlist & Favourites', icon: Heart },
-                { id: 'wallet', label: 'Saved Wallets', icon: CreditCard },
-                { id: 'addresses', label: 'Addresses Logs', icon: MapPin },
                 { id: 'security', label: 'Security & Access', icon: Shield }
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -307,99 +351,42 @@ const Profile = () => {
                 {activeTab === 'bookings' && (
                   <motion.div key="bookings" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                     <div className="pb-4 border-b border-white/[0.04]">
-                      <h3 className={`text-base font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Recent Ticket Interactions</h3>
-                      <p className="text-xs text-slate-500 font-medium">Review purchase sessions history tracks.</p>
+                      <h3 className={`text-base font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Your Booking History</h3>
+                      <p className="text-xs text-slate-500 font-medium">All your past and upcoming ticket bookings.</p>
                     </div>
 
-                    <div className="space-y-3">
-                      {BOOKINGS_HISTORY.map((b) => (
-                        <div key={b.id} className={`p-4 rounded-2xl border flex flex-col sm:flex-row justify-between gap-4 relative overflow-hidden ${
-                          isDarkMode ? "bg-slate-950/40 border-white/5" : "bg-stone-50 border-slate-200"
-                        }`}>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-black ${isDarkMode ? "text-white" : "text-slate-800"}`}>{b.movie}</span>
-                              <span className={`text-[9px] font-black font-mono px-1.5 py-0.2 rounded uppercase ${
-                                b.status === 'Active' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-slate-800/40 text-slate-400"
-                              }`}>{b.status}</span>
+                    {bookingsLoading ? (
+                      <p className="text-xs text-slate-500 font-medium">Loading bookings...</p>
+                    ) : myBookings.length === 0 ? (
+                      <p className="text-xs text-slate-500 font-medium">No bookings yet. Go book your first show!</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {myBookings.map((b) => (
+                          <div key={b._id} className={`p-4 rounded-2xl border flex flex-col sm:flex-row justify-between gap-4 relative overflow-hidden ${
+                            isDarkMode ? "bg-slate-950/40 border-white/5" : "bg-stone-50 border-slate-200"
+                          }`}>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-black ${isDarkMode ? "text-white" : "text-slate-800"}`}>
+                                  {b.show?.movie?.title || 'Movie'}
+                                </span>
+                                <span className={`text-[9px] font-black font-mono px-1.5 py-0.2 rounded uppercase ${
+                                  b.status === 'confirmed' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-slate-800/40 text-slate-400"
+                                }`}>{b.status}</span>
+                              </div>
+                              <p className="text-[11px] font-medium text-slate-500">{b.show?.theatre?.name || 'Theatre'}</p>
+                              <p className="text-[10px] font-medium text-slate-400 font-mono">
+                                {new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} • Seats: {b.seats.join(', ')}
+                              </p>
                             </div>
-                            <p className="text-[11px] font-medium text-slate-500">{b.theater}</p>
-                            <p className="text-[10px] font-medium text-slate-400 font-mono">{b.timing} • Allocation: {b.seats}</p>
-                          </div>
-                          <div className="sm:text-right flex sm:flex-col justify-between sm:justify-center items-center sm:items-end shrink-0">
-                            <span className="text-[10px] text-slate-500 font-mono tracking-wider block">ID: {b.id}</span>
-                            <span className="text-sm font-black text-amber-500 font-mono mt-0.5">{b.amount}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'wishlist' && (
-                  <motion.div key="wishlist" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <div className="pb-4 border-b border-white/[0.04]">
-                      <h3 className={`text-base font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Wishlist & Favourites</h3>
-                      <p className="text-xs text-slate-500 font-medium">Your marked collections and items.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {FAVORITES_LIST.map((f, idx) => (
-                        <div key={idx} className={`p-3 rounded-2xl border flex gap-4 items-center ${
-                          isDarkMode ? "bg-slate-950/40 border-white/5" : "bg-stone-50 border-slate-200"
-                        }`}>
-                          <img src={f.poster} alt="" className="w-12 h-16 object-cover rounded-xl border border-white/5 shrink-0 bg-slate-900" />
-                          <div className="truncate space-y-1">
-                            <h5 className={`text-xs font-black truncate ${isDarkMode ? "text-white" : "text-slate-800"}`}>{f.title}</h5>
-                            <span className="text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded bg-white/5 text-slate-400">{f.type}</span>
-                            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500 pt-0.5">
-                              <Star size={10} className="fill-current" /> {f.rating} User Score
+                            <div className="sm:text-right flex sm:flex-col justify-between sm:justify-center items-center sm:items-end shrink-0">
+                              <span className="text-[10px] text-slate-500 font-mono tracking-wider block">ID: {b._id.slice(-8).toUpperCase()}</span>
+                              <span className="text-sm font-black text-amber-500 font-mono mt-0.5">₹{b.totalAmount}</span>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'wallet' && (
-                  <motion.div key="wallet" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <div className="pb-4 border-b border-white/[0.04]">
-                      <h3 className={`text-base font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Saved Credit & Debit Cards</h3>
-                      <p className="text-xs text-slate-500 font-medium">Manage payment configurations safely.</p>
-                    </div>
-
-                    {SAVED_CARDS.map((c, idx) => (
-                      <div key={idx} className={`p-4 rounded-xl border max-w-sm flex items-center justify-between gap-4 ${
-                        isDarkMode ? "bg-slate-950/40 border-white/5" : "bg-stone-50 border-slate-200"
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-7 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[10px] font-black text-amber-500 font-mono tracking-wider">{c.type}</div>
-                          <div>
-                            <p className={`text-xs font-black tracking-widest font-mono ${isDarkMode ? "text-white" : "text-slate-800"}`}>{c.number}</p>
-                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Expires {c.expiry} • {c.holder}</p>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </motion.div>
-                )}
-
-                {activeTab === 'addresses' && (
-                  <motion.div key="addresses" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <div className="pb-4 border-b border-white/[0.04]">
-                      <h3 className={`text-base font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Address Records Logs</h3>
-                      <p className="text-xs text-slate-500 font-medium">Verify your localized billing directions logs.</p>
-                    </div>
-
-                    {SAVED_ADDRESSES.map((a, idx) => (
-                      <div key={idx} className={`p-4 rounded-xl border space-y-1.5 ${
-                        isDarkMode ? "bg-slate-950/40 border-white/5" : "bg-stone-50 border-slate-200"
-                      }`}>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-500">{a.type}</span>
-                        <p className={`text-xs leading-relaxed font-medium ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>{a.detail}</p>
-                      </div>
-                    ))}
+                    )}
                   </motion.div>
                 )}
 
@@ -407,33 +394,10 @@ const Profile = () => {
                   <motion.div key="security" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="pb-4 border-b border-white/[0.04]">
                       <h3 className={`text-base font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Security & Access</h3>
-                      <p className="text-xs text-slate-500 font-medium">Configure options protecting account identity credentials.</p>
+                      <p className="text-xs text-slate-500 font-medium">Manage your session and local cached data.</p>
                     </div>
 
                     <div className="space-y-4">
-                      <div className={`p-4 border rounded-xl flex items-center justify-between ${isDarkMode ? "bg-white/[0.01] border-white/[0.04]" : "bg-stone-50 border-slate-200"}`}>
-                        <div className="space-y-0.5">
-                          <p className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-slate-800"}`}>Update Password</p>
-                          <p className="text-[11px] text-slate-500 font-medium">Rotate access credentials regularly for privacy security.</p>
-                        </div>
-                        <button type="button" className={`px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all cursor-pointer ${isDarkMode ? "border-white/[0.08] bg-slate-900 text-slate-300 hover:text-white" : "border-stone-300 bg-white text-slate-700 hover:bg-stone-50"}`}>
-                          Update
-                        </button>
-                      </div>
-
-                      <div className={`p-4 border rounded-xl flex items-center justify-between ${isDarkMode ? "bg-white/[0.01] border-white/[0.04]" : "bg-stone-50 border-slate-200"}`}>
-                        <div className="space-y-0.5">
-                          <p className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-slate-800"}`}>Two-Factor Verification (2FA)</p>
-                          <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-                            Activated via secure mobile SMS routes.
-                          </p>
-                        </div>
-                        <button type="button" className={`px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all cursor-pointer ${isDarkMode ? "border-white/[0.08] bg-slate-900 text-slate-400 hover:text-white" : "border-stone-300 bg-white text-slate-700 hover:bg-stone-50"}`}>
-                          Manage
-                        </button>
-                      </div>
-
                       <div className={`p-4 border rounded-xl flex items-center justify-between ${isDarkMode ? "bg-white/[0.01] border-white/[0.04]" : "bg-stone-50 border-slate-200"}`}>
                         <div className="space-y-0.5">
                           <p className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-slate-800"}`}>Local Cached Allocations</p>
@@ -443,12 +407,17 @@ const Profile = () => {
                           type="button"
                           onClick={() => {
                             clearBookingSession();
-                            alert("Cache session parameters cleared out beautifully!");
+                            showxToast.adminSuccess('Local session cache cleared');
                           }} 
                           className="px-3 py-1.5 border-none bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
                         >
                           Clear Session
                         </button>
+                      </div>
+
+                      <div className={`p-4 border rounded-xl ${isDarkMode ? "bg-white/[0.01] border-white/[0.04]" : "bg-stone-50 border-slate-200"}`}>
+                        <p className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-slate-800"}`}>Password Management</p>
+                        <p className="text-[11px] text-slate-500 font-medium mt-1">Coming soon — password change will be available in a future update.</p>
                       </div>
                     </div>
                   </motion.div>

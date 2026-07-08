@@ -6,36 +6,37 @@ import { useRazorpay } from '../hooks/useRazorpay';
 import { useTheme } from '../context/ThemeContext';
 import { 
   ShieldCheck, Loader2, Ticket, MapPin, CalendarClock, 
-  ChevronLeft, CreditCard, Trash2, Clock, Percent, Smartphone, Building 
+  ChevronLeft, CreditCard, Trash2, Clock, Smartphone 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PaymentPageSkeleton } from '../components/atoms/Skeletons';
 import { showxToast } from '../utils/toastConfig';
+import axiosInstance from '../services/axiosInstance';
 
 export default function Payment() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  const { selectedMovie, selectedCinema, selectedShowtime, selectedSeats, totalAmount, clearBookingSession } = useBooking();
+  const { selectedMovie, selectedCinema, selectedShowtime, selectedSeats, totalAmount, bookingId, clearBookingSession } = useBooking();
   const { isScriptLoaded, openPaymentModal } = useRazorpay();
   const [isPaying, setIsPaying] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const movieTitle = selectedMovie?.title || 'Active Blockbuster Selection';
   const cinemaName = selectedCinema || 'Showx Premium Multiplex Lounge';
   const showtimeSlot = selectedShowtime || 'Today, Evening Show';
   const seatCount = selectedSeats?.length || 0;
-  const basePrice = seatCount * 200;
-  const convenientFee = seatCount > 0 ? 30 * seatCount : 0; 
 
-  const GST_RATE = 0.18; 
+  // Real amount comes straight from the backend booking (created in Step 6) — this is
+  // the source of truth. Convenience fee / GST below are shown only as an informational
+  // breakdown; the actual amount charged via Razorpay always equals the backend's order amount.
+  const basePrice = totalAmount;
+  const convenientFee = seatCount > 0 ? 10 * seatCount : 0;
+  const GST_RATE = 0.18;
   const gstAmount = Math.round(convenientFee * GST_RATE);
+  const finalPayable = basePrice; // charged amount always mirrors backend's real total
 
-  const [promoCode, setPromoCode] = useState('');
-  const [discount, setDiscount] = useState(0);
-  const [isPromoApplied, setIsPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('gateway');
-
   const [timeLeft, setTimeLeft] = useState(600);
 
   useEffect(() => {
@@ -62,19 +63,6 @@ export default function Payment() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleApplyPromo = (e) => {
-    e.preventDefault();
-    setPromoError('');
-    if (promoCode.trim().toUpperCase() === 'SHOWX50') {
-      setDiscount(50);
-      setIsPromoApplied(true);
-    } else {
-      setPromoError('Invalid code. Try "SHOWX50"');
-    }
-  };
-
-  const finalPayable = seatCount > 0 ? (basePrice + convenientFee + gstAmount - discount) : 0;
-
   const handleClearSelection = () => {
     clearBookingSession();
     navigate('/movies');
@@ -82,26 +70,46 @@ export default function Payment() {
 
   const handleRazorpayGateway = async (e) => {
     e.preventDefault();
+
+    if (!bookingId) {
+      setErrorMsg("No active booking found. Please select seats again.");
+      return;
+    }
+
     setIsPaying(true);
+    setErrorMsg('');
 
     try {
-      const mockBackendOrderData = {
-        orderId: 'SHX-' + Math.floor(100000 + Math.random() * 900000),
-        amount: finalPayable * 100 
-      };
+      // 1. Ask our backend to create a real Razorpay order for this booking
+      const orderRes = await axiosInstance.post('/payments/create-order', { bookingId });
+      const { order, key } = orderRes.data;
 
-      openPaymentModal(mockBackendOrderData, (paymentResult) => {
-        console.log('Payment captured verified token:', paymentResult);
-        setIsPaying(false);
-        clearBookingSession(); 
-        showxToast.paymentSuccess(mockBackendOrderData.orderId);
-        showxToast.bookingSuccess(movieTitle);
-        navigate(`/confirmation/${mockBackendOrderData.orderId}`);
+      // 2. Open the real Razorpay checkout with the real order id/amount/key
+      openPaymentModal({ orderId: order.id, amount: order.amount, key }, async (paymentResult) => {
+        try {
+          // 3. Convert camelCase (from useRazorpay hook) to snake_case (backend expects this)
+          await axiosInstance.post('/payments/verify', {
+            razorpay_order_id: paymentResult.razorpayOrderId,
+            razorpay_payment_id: paymentResult.razorpayPaymentId,
+            razorpay_signature: paymentResult.razorpaySignature,
+            bookingId,
+          });
+
+          setIsPaying(false);
+          showxToast.paymentSuccess(paymentResult.razorpayPaymentId);
+          showxToast.bookingSuccess(movieTitle);
+          clearBookingSession();
+          navigate(`/confirmation/${paymentResult.razorpayPaymentId}`);
+        } catch (verifyErr) {
+          setIsPaying(false);
+          setErrorMsg(verifyErr.response?.data?.message || "Payment verification failed.");
+          showxToast.paymentFailed();
+        }
       });
-
     } catch (err) {
       console.error(err);
       setIsPaying(false);
+      setErrorMsg(err.response?.data?.message || "Could not start payment. Please try again.");
       showxToast.paymentFailed();
     }
   };
@@ -155,6 +163,10 @@ export default function Payment() {
           </motion.button>
         )}
       </div>
+
+      {errorMsg && (
+        <p className="text-center text-xs font-bold text-rose-500">{errorMsg}</p>
+      )}
 
       {/* Main Checkout Operational Section Splitter */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
@@ -212,28 +224,6 @@ export default function Payment() {
                 <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
                   Supports all major Indian credit nodes, corporate debit cards, immediate NetBanking, and UPI aggregators directly inside a single modal overlay dashboard.
                 </p>
-              </div>
-            </div>
-          )}
-
-          {selectedMethod === 'card' && (
-            <div className="space-y-3.5 animate-in fade-in duration-200">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wide text-slate-400">Cardholder Name</label>
-                <input type="text" placeholder="Jiya Sukhija" className={`w-full text-xs p-3.5 rounded-xl border outline-none ${isDarkMode ? "bg-slate-950 border-white/5 text-white focus:border-amber-500/40" : "bg-stone-50 border-slate-200 text-slate-800"}`} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wide text-slate-400">Card Number Matrix</label>
-                <input type="text" placeholder="4532 •••• •••• 8824" maxLength="19" className={`w-full text-xs p-3.5 rounded-xl border outline-none ${isDarkMode ? "bg-slate-950 border-white/5 text-white focus:border-amber-500/40" : "bg-stone-50 border-slate-200 text-slate-800"}`} />
-              </div>
-            </div>
-          )}
-
-          {selectedMethod === 'upi' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wide text-slate-400">Virtual Payment Address (UPI ID)</label>
-                <input type="text" placeholder="jiya@okhdfcbank" className={`w-full text-xs p-3.5 rounded-xl border outline-none ${isDarkMode ? "bg-slate-950 border-white/5 text-white focus:border-amber-500/40" : "bg-stone-50 border-slate-200 text-slate-800"}`} />
               </div>
             </div>
           )}
@@ -297,53 +287,11 @@ export default function Payment() {
             </div>
           </div>
 
-          <div className={`pt-4 border-t ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`}>
-            <form onSubmit={handleApplyPromo} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="PROMO CODE"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                disabled={isPromoApplied}
-                className={`text-xs px-3 py-2 rounded-xl border outline-none font-mono tracking-wider flex-grow ${
-                  isDarkMode ? "bg-slate-900 border-white/5 text-white focus:border-amber-500/30" : "bg-white border-stone-200 text-slate-800"
-                }`}
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="submit"
-                disabled={isPromoApplied || !promoCode.trim()}
-                className={`px-3 py-2 rounded-xl text-xs font-black tracking-wide border-none transition cursor-pointer ${
-                  isPromoApplied ? "bg-emerald-500/10 text-emerald-400" : "bg-white text-stone-950 hover:bg-amber-500"
-                }`}
-              >
-                {isPromoApplied ? "Applied" : "Apply"}
-              </motion.button>
-            </form>
-            {promoError && <p className="text-[10px] text-rose-500 font-bold mt-1 pl-1">{promoError}</p>}
-            {isPromoApplied && <p className="text-[10px] text-emerald-500 font-bold mt-1 pl-1">Voucher saved ₹50.00!</p>}
-          </div>
-
           <div className={`border-t pt-4 space-y-2.5 text-xs ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`}>
             <div className="flex justify-between font-medium">
-              <span className="text-slate-500">Ticket Base Fare ({seatCount} x ₹200)</span>
+              <span className="text-slate-500">Ticket Amount ({seatCount} seats)</span>
               <span className={isDarkMode ? "text-slate-300 font-mono" : "text-stone-700 font-mono"}>₹{basePrice}.00</span>
             </div>
-            <div className="flex justify-between font-medium">
-              <span className="text-slate-500">Integrated Convenience Fee</span>
-              <span className={isDarkMode ? "text-slate-300 font-mono" : "text-stone-700 font-mono"}>₹{convenientFee}.00</span>
-            </div>
-            <div className="flex justify-between font-medium">
-              <span className="text-slate-500">Central GST (18% on convenience fee)</span>
-              <span className={isDarkMode ? "text-slate-300 font-mono" : "text-stone-700 font-mono"}>₹{gstAmount}.00</span>
-            </div>
-            {isPromoApplied && (
-              <div className="flex justify-between font-bold text-emerald-500">
-                <span>Voucher Code Discount</span>
-                <span className="font-mono">- ₹{discount}.00</span>
-              </div>
-            )}
             <hr className={isDarkMode ? "border-white/[0.04] my-1" : "border-stone-200/60 my-1"} />
             <div className="flex justify-between items-baseline pt-1">
               <span className={`font-black uppercase tracking-wider text-[10px] ${isDarkMode ? "text-white" : "text-stone-900"}`}>Total Grand Payable</span>

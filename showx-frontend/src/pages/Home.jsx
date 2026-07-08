@@ -2,16 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Play, Star, Flame, Tv, Sparkles, Ticket, MapPin, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Star, Flame, Building, Ticket, MapPin, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { fetchItemsByType } from '../services/api';
+import axiosInstance from '../services/axiosInstance';
 import MovieCard from '../components/molecules/MovieCard';
 import { HomeHeroSkeleton, MovieCardSkeleton } from '../components/atoms/Skeletons';
 
-// Local assets imported directly from your project folders
-import jungleImg from '../assets/welcome-to-the-jungle-.avif';
-import vaapasImg from '../assets/main-vaapas-aaunga-.avif';
-import cocktailImg from '../assets/cocktail-2-.avif';
+const THEATRE_BG_IMAGES = [
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=800&auto=format&fit=crop",
+];
 
 export default function Home() {
   const navigate = useNavigate();
@@ -22,64 +24,32 @@ export default function Home() {
   const [autoplay, setAutoplay] = useState(true);
 
   const [movies, setMovies] = useState([]);
-  const [streams, setStreams] = useState([]);
-  const [events, setEvents] = useState([]);
+  const [theatres, setTheatres] = useState([]);
 
-  const carouselBanners = [
-    {
-      id: "b1",
-      title: "Welcome To The Jungle",
-      subtitle: "NOW BOOKING IN THEATERS",
-      category: "Comedy • Adventure • Hindi",
-      duration: "2h 35m",
-      rating: "8.4",
-      location: "Wave Cinemas, Centra Mall & PVR Dolby Cinema",
-      date: "In Cinemas Now",
-      image: jungleImg,
-      badge: "MASS ENTERTAINER",
-      link: "/movies",
-      trailerLink: "#"
-    },
-    {
-      id: "b2",
-      title: "Main Vaapas Aaunga",
-      subtitle: "AN IMTIAZ ALI MUSICAL EXPERIENCE",
-      category: "Drama • Musical • Hindi",
-      duration: "2h 42m",
-      rating: "9.1",
-      location: "PVR Directors Cut & Select Standard Theaters",
-      date: "Trending Blockbuster",
-      image: vaapasImg,
-      badge: "IMTIAZ ALI MUSICAL",
-      link: "/movies",
-      trailerLink: "#"
-    },
-    {
-      id: "b3",
-      title: "Cocktail 2",
-      subtitle: "THE ULTIMATE ROM-COM SEQUEL",
-      category: "Rom-Com • Hindi",
-      duration: "2h 18m",
-      rating: "8.0",
-      location: "Cinepolis IMAX & PVR Atmos Hubs",
-      date: "Tickets Selling Fast",
-      image: cocktailImg,
-      badge: "TRENDING NOW",
-      link: "/movies",
-      trailerLink: "#"
-    }
-  ];
+  const carouselBanners = movies.slice(0, 3).map((m) => ({
+    id: m.id,
+    title: m.title,
+    subtitle: "NOW BOOKING IN THEATERS",
+    category: `${m.genre || 'Movie'} • ${m.language || ''}`.trim(),
+    duration: m.duration || '—',
+    rating: m.rating || '—',
+    location: "Available across Showx partner theatres",
+    date: "In Cinemas Now",
+    image: m.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1600&auto=format&fit=crop",
+    heroFocusY: m.heroFocusY || 'center',
+    badge: m.tag || "NOW SHOWING",
+    link: `/movies/${m.id}`,
+    trailerLink: "#"
+  }));
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
       fetchItemsByType('movie'),
-      fetchItemsByType('stream'),
-      fetchItemsByType('events')
-    ]).then(([moviesData, streamsData, eventsData]) => {
+      axiosInstance.get('/theatres')
+    ]).then(([moviesData, theatresRes]) => {
       setMovies(moviesData.slice(0, 4));
-      setStreams(streamsData.slice(0, 4));
-      setEvents(eventsData.slice(0, 4));
+      setTheatres(theatresRes.data.theatres.slice(0, 3));
       setTimeout(() => setLoading(false), 550);
     }).catch(err => {
       console.error(err);
@@ -88,7 +58,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!autoplay || loading) return;
+    if (!autoplay || loading || carouselBanners.length === 0) return;
     const slideTimer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % carouselBanners.length);
     }, 6000); 
@@ -106,7 +76,7 @@ export default function Home() {
   return (
     <div className="space-y-12 pb-16 relative">
       
-      {loading ? (
+      {loading || carouselBanners.length === 0 ? (
         <HomeHeroSkeleton />
       ) : (
         <div 
@@ -126,7 +96,8 @@ export default function Home() {
               <img 
                 src={carouselBanners[currentSlide].image} 
                 alt={carouselBanners[currentSlide].title}
-                className="w-full h-full object-cover object-[center_20%] md:object-[center_15%] select-none transition-all duration-700"
+                style={{ objectPosition: `center ${carouselBanners[currentSlide].heroFocusY}` }}
+                className="w-full h-full object-cover select-none transition-all duration-700"
               />
               
               <div className={`absolute inset-0 z-10 bg-gradient-to-t ${isDarkMode ? "from-slate-950 via-slate-950/50 to-transparent" : "from-stone-950 via-stone-950/40 to-transparent"}`} />
@@ -177,14 +148,6 @@ export default function Home() {
                   >
                     <Ticket size={14} /> Book Now
                   </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => window.open(carouselBanners[currentSlide].trailerLink, '_blank')}
-                    className="px-6 py-3 rounded-xl text-xs font-black bg-white/10 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer flex items-center gap-2"
-                  >
-                    <Play size={14} className="fill-current" /> Watch Trailer
-                  </motion.button>
                 </div>
               </div>
             </motion.div>
@@ -220,39 +183,45 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Streams Section */}
+      {/* Theatres Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl md:text-2xl font-black font-display tracking-tight flex items-center gap-2">
-            <Tv size={20} className="text-amber-500" /> Showx Stream Library
+            <Building size={20} className="text-amber-500" /> Book at Your Favorite Theatres
           </h2>
-          <button onClick={() => navigate('/stream')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer">View All</button>
+          <button onClick={() => navigate('/theatres')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer">View All</button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           {loading ? (
-            Array.from({ length: 4 }).map((_, idx) => <MovieCardSkeleton key={idx} />)
+            Array.from({ length: 3 }).map((_, idx) => <MovieCardSkeleton key={idx} />)
           ) : (
-            streams.map(item => (
-              <MovieCard key={item.id} movie={item} onActionClick={() => navigate(`/stream/${item.id}`)} actionLabel="Rent Stream" />
-            ))
-          )}
-        </div>
-      </div>
+            theatres.map((t, idx) => (
+              <button
+                key={t._id}
+                onClick={() => navigate('/theatres')}
+                className="relative text-left rounded-3xl overflow-hidden border border-white/[0.08] group h-52 shadow-xl"
+              >
+                <img
+                  src={THEATRE_BG_IMAGES[idx % THEATRE_BG_IMAGES.length]}
+                  alt={t.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className={`absolute inset-0 ${isDarkMode ? "bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-slate-950/30" : "bg-gradient-to-t from-stone-950/90 via-stone-950/60 to-stone-950/20"}`} />
+                <div className="absolute inset-0 bg-amber-500/10 mix-blend-overlay" />
 
-      {/* Concerts Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl md:text-2xl font-black font-display tracking-tight flex items-center gap-2">
-            <Sparkles size={20} className="text-amber-500" /> Live Concerts & Events
-          </h2>
-          <button onClick={() => navigate('/events')} className="text-xs font-bold text-amber-500 hover:underline bg-transparent border-none cursor-pointer">View All</button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loading ? (
-            Array.from({ length: 4 }).map((_, idx) => <MovieCardSkeleton key={idx} />)
-          ) : (
-            events.map(item => (
-              <MovieCard key={item.id} movie={item} onActionClick={() => navigate(`/events/${item.id}`)} actionLabel="Book Passes" />
+                <div className="relative z-10 h-full flex flex-col justify-end p-6">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-500/15 backdrop-blur-md border border-amber-500/30 flex items-center justify-center mb-3">
+                    <Building size={20} className="text-amber-400" />
+                  </div>
+                  <h3 className="text-lg font-black text-white">{t.name}</h3>
+                  <p className="text-sm text-slate-300 mt-1 flex items-center gap-1">
+                    <MapPin size={12} className="text-amber-400" /> {t.location}, {t.city}
+                  </p>
+                  <p className="text-xs text-amber-400 font-bold mt-2 tracking-wide">
+                    {(t.formats || []).join(' • ')}
+                  </p>
+                </div>
+              </button>
             ))
           )}
         </div>

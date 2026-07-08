@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/atoms/Toast';
+import axiosInstance from '../services/axiosInstance';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Login = () => {
     if (!email) tempErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(email)) tempErrors.email = "Please enter a valid email address";
     if (!password) tempErrors.password = "Password is required";
-    else if (password.length < 8) tempErrors.password = "Password must be at least 8 characters";
+    else if (password.length < 6) tempErrors.password = "Password must be at least 6 characters";
     
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
@@ -36,13 +37,12 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      // Mock Authentication handling logic execution
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await axiosInstance.post('/auth/login', { email, password });
       setToast({ message: "Welcome back! Login successful.", type: 'success' });
-      console.log({ email, password, rememberMe });
       setTimeout(() => navigate('/'), 1000);
     } catch (err) {
-      setToast({ message: "Invalid credentials. Please verify your details.", type: 'error' });
+      const message = err.response?.data?.message || "Invalid credentials. Please verify your details.";
+      setToast({ message, type: 'error' });
     } finally {
       setIsLoading(false);
     }

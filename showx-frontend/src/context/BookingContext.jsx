@@ -33,6 +33,17 @@ export function BookingProvider({ children }) {
     return localStorage.getItem('shx_city') || 'Karnal';
   });
 
+  // The full real Show document (from backend) selected during booking flow
+  const [selectedShow, setSelectedShow] = useState(() => {
+    const saved = localStorage.getItem('shx_show');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // The real Booking _id returned by the backend after creating a booking
+  const [bookingId, setBookingId] = useState(() => {
+    return localStorage.getItem('shx_bookingId') || '';
+  });
+
   // 2. Synchronize states with localStorage whenever they update
   useEffect(() => {
     if (selectedMovie) localStorage.setItem('shx_movie', JSON.stringify(selectedMovie));
@@ -63,6 +74,16 @@ export function BookingProvider({ children }) {
     else localStorage.removeItem('shx_city');
   }, [selectedCity]);
 
+  useEffect(() => {
+    if (selectedShow) localStorage.setItem('shx_show', JSON.stringify(selectedShow));
+    else localStorage.removeItem('shx_show');
+  }, [selectedShow]);
+
+  useEffect(() => {
+    if (bookingId) localStorage.setItem('shx_bookingId', bookingId);
+    else localStorage.removeItem('shx_bookingId');
+  }, [bookingId]);
+
   // 3. Clear session out cleanly when order completes
   const clearBookingSession = () => {
     setSelectedMovie(null);
@@ -70,11 +91,15 @@ export function BookingProvider({ children }) {
     setSelectedShowtime('');
     setSelectedSeats([]);
     setTotalAmount(0);
+    setSelectedShow(null);
+    setBookingId('');
     localStorage.removeItem('shx_movie');
     localStorage.removeItem('shx_cinema');
     localStorage.removeItem('shx_showtime');
     localStorage.removeItem('shx_seats');
     localStorage.removeItem('shx_amount');
+    localStorage.removeItem('shx_show');
+    localStorage.removeItem('shx_bookingId');
     // Note: selectedCity is intentionally preserved so the user's location remains fixed across completions
   };
 
@@ -93,6 +118,10 @@ export function BookingProvider({ children }) {
         setTotalAmount,
         selectedCity,       // Exposed layout tracking hook
         setSelectedCity,   // Exposed mutation dispatch variable
+        selectedShow,
+        setSelectedShow,
+        bookingId,
+        setBookingId,
         clearBookingSession,
       }}
     >

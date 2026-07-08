@@ -6,40 +6,27 @@ import { Flame, Sparkles, LayoutGrid } from 'lucide-react';
 import MovieCard from '../components/molecules/MovieCard';
 import { useTheme } from '../context/ThemeContext';
 import { MovieCardSkeleton } from '../components/atoms/Skeletons';
-
-// Import optimized .avif image targets from your project assets folder
-import carryOnJatta4Avif from '../assets/carry-on-jatta-4-.avif';
-import cocktail2Avif from '../assets/cocktail-2-.avif';
-import mainVaapasAvif from '../assets/main-vaapas-aaunga-.avif';
-import welcomeJungleAvif from '../assets/welcome-to-the-jungle-.avif';
-import alphaAvif from '../assets/alpha-.avif';
+import { fetchAllMovies } from '../services/api';
 
 export default function MovieListing() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   
   const [selectedGenre, setSelectedGenre] = useState('All');
-  const [loading, setLoading] = useState(false);
-
-  const movieDataStore = [
-    { id: 'm1', title: 'Welcome To The Jungle', genre: 'Comedy', rating: '8.4', language: 'Hindi', format: '2D / Dolby Cinema', tag: 'Mass Entertainer', poster: welcomeJungleAvif },
-    { id: 'm2', title: 'Spider-Man: Brand New Day', genre: 'Action', rating: '9.2', language: 'English / Hindi', format: 'IMAX 3D / 4DX', tag: 'Blockbuster', poster: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=600&auto=format&fit=crop' },
-    { id: 'm3', title: 'Alpha', genre: 'Action', rating: '8.9', language: 'Hindi / Tamil / Telugu', format: '2D / ICE Theatre', tag: 'YRF Spy Universe', poster: alphaAvif },
-    { id: 'm4', title: 'Main Vaapas Aaunga', genre: 'Drama', rating: '9.1', language: 'Hindi', format: '2D Standard', tag: 'Imtiaz Ali Musical', poster: mainVaapasAvif },
-    { id: 'm5', title: 'Cocktail 2', genre: 'Rom-Com', rating: '8.0', language: 'Hindi', format: '2D / Atmos', tag: 'Trending Now', poster: cocktail2Avif },
-    { id: 'm6', title: 'Carry on Jatta 4', genre: 'Comedy', rating: '8.8', language: 'Punjabi', format: '2D Standard', tag: 'Regional Blockbuster', poster: carryOnJatta4Avif }
-  ];
-
-  const genres = ['All', 'Action', 'Comedy', 'Drama', 'Rom-Com'];
-  const filteredMovies = selectedGenre === 'All' 
-    ? movieDataStore 
-    : movieDataStore.filter(m => m.genre === selectedGenre);
+  const [loading, setLoading] = useState(true);
+  const [allMovies, setAllMovies] = useState([]);
 
   useEffect(() => {
     setLoading(true);
-    const filterTimer = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(filterTimer);
-  }, [selectedGenre]);
+    fetchAllMovies()
+      .then((data) => setAllMovies(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const genres = ['All', ...Array.from(new Set(allMovies.map((m) => m.genre).filter(Boolean)))];
+  const filteredMovies = selectedGenre === 'All' 
+    ? allMovies 
+    : allMovies.filter(m => m.genre === selectedGenre);
 
   return (
     <div className="space-y-10">
@@ -56,7 +43,7 @@ export default function MovieListing() {
             <Flame size={12} /> Live Box Office Catalog
           </div>
           <h1 className={`text-4xl md:text-5xl font-black tracking-tight leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Discover Your Next <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-amber-400">Cinematic Tour</span>
+            Discover Your Next<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300">Cinematic Tour</span>
           </h1>
           <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
             Reserve active multiplex seats instantly. Access high-resolution theater grids across all premium formats including IMAX, Dolby Atmos, and 4K Spatial Sound clusters.

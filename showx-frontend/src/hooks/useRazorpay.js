@@ -42,7 +42,7 @@ export function useRazorpay() {
     }
 
     const options = {
-      key: 'rzp_test_YOUR_KEY_HERE', 
+      key: paymentConfig.key, 
       amount: paymentConfig.amount,  
       currency: 'INR',
       name: 'Showx — CinemaHub',
