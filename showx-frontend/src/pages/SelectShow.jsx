@@ -1,43 +1,39 @@
 // src/pages/SelectShow.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { CalendarRange, MapPin, Film, Clock, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-
-const CINEMA_SCHEDULES = [
-  {
-    id: 'cin-1',
-    name: 'Showx Prime Multiplex: PVR Gold',
-    location: 'Sector 12, Downtown Hub',
-    formats: ['IMAX 3D', '4DX', '2D'],
-    timings: ['10:30 AM', '01:45 PM', '05:00 PM', '08:30 PM', '11:15 PM']
-  },
-  {
-    id: 'cin-2',
-    name: 'Showx Cinema: Wave Galleries',
-    location: 'Mall of Cinema, Central Avenue',
-    formats: ['3D', '2D'],
-    timings: ['11:00 AM', '02:30 PM', '06:15 PM', '09:45 PM']
-  },
-  {
-    id: 'cin-3',
-    name: 'Showx IMAX & Insignia Lounge',
-    location: 'Royal Galleria, Elite Block',
-    formats: ['IMAX 3D', 'Insignia Luxury'],
-    timings: ['12:00 PM', '04:00 PM', '07:30 PM', '10:45 PM']
-  }
-];
+import axiosInstance from '../services/axiosInstance';
 
 export default function SelectShow() {
   const { movieId } = useParams();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  const { selectedMovie, setSelectedCinema, setSelectedShowtime } = useBooking();
+  const { selectedMovie, setSelectedCinema, setSelectedShowtime, setSelectedShow } = useBooking();
 
-  const handleTimeSelection = (cinemaName, showtime) => {
-    setSelectedCinema(cinemaName);
-    setSelectedShowtime(showtime);
+  const [shows, setShows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadShows = async () => {
+      try {
+        const res = await axiosInstance.get('/shows');
+        const showsForMovie = res.data.shows.filter((s) => s.movie._id === movieId);
+        setShows(showsForMovie);
+      } catch (err) {
+        console.error("Error loading shows:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadShows();
+  }, [movieId]);
+
+  const handleTimeSelection = (show) => {
+    setSelectedCinema(show.theatre.name);
+    setSelectedShowtime(show.showTime);
+    setSelectedShow(show);
     navigate(`/booking/${movieId}/seats`);
   };
 
@@ -79,70 +75,70 @@ export default function SelectShow() {
 
       {/* Cinema Listings Matrix Loops */}
       <div className="space-y-6">
-        {CINEMA_SCHEDULES.map((cinema) => (
-          <div 
-            key={cinema.id}
-            className={`border rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 space-y-6 ${
-              isDarkMode 
-                ? "bg-gradient-to-b from-white/[0.02] to-transparent border-white/[0.04] hover:border-amber-500/20" 
-                : "bg-white border-stone-200/80 hover:border-amber-500/40"
-            }`}
-          >
-            {/* Multiplex Meta Information Block */}
-            <div className={`flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 border-b ${
-              isDarkMode ? "border-white/[0.04]" : "border-stone-100"
-            }`}>
-              <div className="space-y-1">
-                <h2 className={`text-base font-display font-black tracking-tight ${isDarkMode ? "text-white" : "text-stone-800"}`}>
-                  {cinema.name}
-                </h2>
-                <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                  <MapPin size={12} className="text-amber-600 shrink-0" /> {cinema.location}
-                </p>
-              </div>
+        {loading ? (
+          <p className="text-center text-sm text-slate-400 py-10">Loading showtimes...</p>
+        ) : shows.length === 0 ? (
+          <p className="text-center text-sm text-slate-400 py-10">No shows available for this movie yet.</p>
+        ) : (
+          shows.map((show) => (
+            <div 
+              key={show._id}
+              className={`border rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 space-y-6 ${
+                isDarkMode 
+                  ? "bg-gradient-to-b from-white/[0.02] to-transparent border-white/[0.04] hover:border-amber-500/20" 
+                  : "bg-white border-stone-200/80 hover:border-amber-500/40"
+              }`}
+            >
+              {/* Multiplex Meta Information Block */}
+              <div className={`flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 border-b ${
+                isDarkMode ? "border-white/[0.04]" : "border-stone-100"
+              }`}>
+                <div className="space-y-1">
+                  <h2 className={`text-base font-display font-black tracking-tight ${isDarkMode ? "text-white" : "text-stone-800"}`}>
+                    {show.theatre.name}
+                  </h2>
+                  <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                    <MapPin size={12} className="text-amber-600 shrink-0" /> {show.theatre.location}
+                  </p>
+                </div>
 
-              {/* Supported Audio/Visual Formats Badges */}
-              <div className="flex flex-wrap gap-1.5 pt-1 sm:pt-0">
-                {cinema.formats.map((fmt) => (
+                {/* Supported Audio/Visual Formats Badges */}
+                <div className="flex flex-wrap gap-1.5 pt-1 sm:pt-0">
                   <span 
-                    key={fmt} 
                     className={`text-[9px] font-black px-2.5 py-1 rounded-md border tracking-wider uppercase font-mono ${
                       isDarkMode 
                         ? "bg-slate-950 text-slate-400 border-white/[0.04]" 
                         : "bg-stone-50 text-stone-600 border-stone-200"
                     }`}
                   >
-                    {fmt}
+                    {show.format}
                   </span>
-                ))}
+                </div>
               </div>
-            </div>
 
-            {/* Grid Time Selection Chips Layout Block */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                <Clock size={11} className="text-amber-600" /> Available Showtimes
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {cinema.timings.map((time) => (
+              {/* Grid Time Selection Chips Layout Block */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <Clock size={11} className="text-amber-600" /> {show.screen} &bull; ₹{show.price} per seat
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   <button
-                    key={time}
-                    onClick={() => handleTimeSelection(cinema.name, time)}
+                    onClick={() => handleTimeSelection(show)}
                     className={`py-3.5 px-4 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer text-center group active:scale-95 flex items-center justify-center gap-1 shadow-sm ${
                       isDarkMode 
                         ? "bg-slate-950 text-amber-500 border-white/[0.04] hover:border-amber-500/40 hover:bg-amber-500/5 hover:text-white" 
                         : "bg-stone-50 text-amber-800 border-stone-200 hover:border-amber-600 hover:bg-stone-950 hover:text-white"
                     }`}
                   >
-                    <span>{time}</span>
+                    <span>{show.showTime}</span>
                     <ChevronRight size={11} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 shrink-0" />
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
 
-          </div>
-        ))}
+            </div>
+          ))
+        )}
       </div>
 
     </div>

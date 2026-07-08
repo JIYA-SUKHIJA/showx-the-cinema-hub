@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Film, Ticket, Building, User, CreditCard, Settings, LogOut, ChevronLeft, Clapperboard } from 'lucide-react';
+import { LayoutDashboard, Film, Ticket, Building, User, CreditCard, Settings, LogOut, ChevronLeft, Clapperboard, CalendarClock } from 'lucide-react';
 
 export default function Sidebar({ isExpanded, toggleSidebar, activeTab, setActiveTab, logout }) {
   const navItems = [
@@ -8,6 +8,7 @@ export default function Sidebar({ isExpanded, toggleSidebar, activeTab, setActiv
     { id: 'movies', label: 'Movie Hub', icon: Film },
     { id: 'bookings', label: 'Bookings Logs', icon: Ticket },
     { id: 'theatres', label: 'Theatres', icon: Building },
+    { id: 'shows', label: 'Show Schedule', icon: CalendarClock },
     { id: 'users', label: 'User Matrix', icon: User },
     { id: 'payments', label: 'Payment Nodes', icon: CreditCard },
     { id: 'settings', label: 'System Settings', icon: Settings }

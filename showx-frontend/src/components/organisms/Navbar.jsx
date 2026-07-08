@@ -4,37 +4,52 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Clapperboard, User, MapPin, ChevronDown, 
-  Film, Tv, Sparkles, Theater, ShieldCheck, Sun, Moon, 
-  LogOut, Ticket, Settings, HelpCircle, LogIn
+  Film, Building, Sparkles, ShieldCheck, Sun, Moon, 
+  LogOut, Ticket, HelpCircle, LogIn, Home
 } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 import { useTheme } from '../../context/ThemeContext';
+import axiosInstance from '../../services/axiosInstance';
 import SearchModal from './SearchModal';
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { clearBookingSession, selectedCity, setSelectedCity } = useBooking(); // Swapped local city hook with global context hook
+  const { clearBookingSession, selectedCity, setSelectedCity } = useBooking();
   const { isDarkMode, toggleTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Dynamic Auth Mock State Placeholder
-  const isLoggedIn = true;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
+    role: "user",
+  });
 
-  const user = {
-    name: "Jiya Sukhija",
-    email: "jiya.sukhija@cinema.com",
-    role: "admin", 
-    activeBookingsCount: 2,
-    latestBookingId: "SHX-582910"
-  };
+  useEffect(() => {
+    const fetchNavbarUser = async () => {
+      try {
+        const res = await axiosInstance.get('/auth/profile');
+        const backendUser = res.data.user;
+        setUser((prev) => ({
+          ...prev,
+          name: backendUser.name,
+          email: backendUser.email,
+          role: backendUser.role,
+        }));
+        setIsLoggedIn(true);
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    };
+    fetchNavbarUser();
+  }, []);
 
   const placeholders = [
     "Search for Movies...",
-    "Search for On-Demand Streams...",
-    "Search for Live Music Concerts...",
-    "Search for Theatre Plays & Standup Comedy..."
+    "Search for Theatres...",
+    "Search for Latest Releases...",
   ];
   const [currentText, setCurrentText] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -78,11 +93,17 @@ export default function Navbar() {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsProfileOpen(false);
-    clearBookingSession();
-    sessionStorage.clear();
-    navigate('/login');
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (err) {
+      console.error("Logout call failed", err);
+    } finally {
+      clearBookingSession();
+      sessionStorage.clear();
+      navigate('/login');
+    }
   };
 
   const handleSearchSubmit = (query) => {
@@ -128,7 +149,7 @@ export default function Navbar() {
                 ? "bg-white/[0.03] hover:bg-white/[0.05] border-white/[0.06] text-slate-400" 
                 : "bg-stone-50 hover:bg-stone-100/70 border-stone-200 text-slate-500"
             }`}>
-              <span>{currentText || "Search movies, streams, events..."}</span>
+              <span>{currentText || "Search movies, theatres, releases..."}</span>
               <kbd className={`ml-auto px-1.5 py-0.5 rounded text-[10px] font-mono border shadow-sm ${
                 isDarkMode ? "bg-slate-900 border-white/10 text-slate-500" : "bg-white border-stone-200 text-stone-400"
               }`}>
@@ -234,12 +255,8 @@ export default function Navbar() {
                           <Link to="/profile" onClick={() => setIsProfileOpen(false)} className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
                             <User size={14} className="text-amber-500" /> Account Profile
                           </Link>
-                          <Link to={`/confirmation/${user.latestBookingId}`} onClick={() => setIsProfileOpen(false)} className={`flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
-                            <span className="flex items-center gap-2.5"><Ticket size={14} /> Your Bookings</span>
-                            {user.activeBookingsCount > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-black border border-amber-500/20 uppercase tracking-wide">{user.activeBookingsCount} Active</span>}
-                          </Link>
-                          <Link to="/stream" onClick={() => setIsProfileOpen(false)} className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
-                            <Tv size={14} /> Streaming Library
+                          <Link to="/profile" onClick={() => setIsProfileOpen(false)} className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
+                            <Ticket size={14} /> Your Bookings
                           </Link>
                           {user.role === 'admin' && (
                             <Link to="/admin" onClick={() => setIsProfileOpen(false)} className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
@@ -247,9 +264,6 @@ export default function Navbar() {
                             </Link>
                           )}
                           <hr className={isDarkMode ? "border-white/[0.05]" : "border-stone-100"} />
-                          <Link to="/settings" onClick={() => setIsProfileOpen(false)} className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
-                            <Settings size={14} /> Settings
-                          </Link>
                           <Link to="/support" onClick={() => setIsProfileOpen(false)} className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-colors ${isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"}`}>
                             <HelpCircle size={14} /> Help & Support
                           </Link>
@@ -271,10 +285,17 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* --- LOWER BAR --- */}
         <div className={`border-t hidden sm:block ${isDarkMode ? "bg-slate-950/40 border-white/[0.02]" : "bg-stone-50/60 border-stone-200/40"}`}>
           <div className="max-w-[1440px] mx-auto px-6 h-12 flex items-center justify-between text-xs font-bold">
             <div className="flex items-center gap-6">
+              <NavLink to="/" end className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
+                {({ isActive }) => (
+                  <>
+                    <Home size={13} /> Home
+                    {isActive && <motion.div layoutId="navUnderline" className="absolute bottom-[-14px] left-0 right-0 h-[2px] bg-amber-500" />}
+                  </>
+                )}
+              </NavLink>
               <NavLink to="/movies" className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
                 {({ isActive }) => (
                   <>
@@ -283,26 +304,18 @@ export default function Navbar() {
                   </>
                 )}
               </NavLink>
-              <NavLink to="/stream" className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
+              <NavLink to="/theatres" className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
                 {({ isActive }) => (
                   <>
-                    <Tv size={13} /> Stream
+                    <Building size={13} /> Theatres
                     {isActive && <motion.div layoutId="navUnderline" className="absolute bottom-[-14px] left-0 right-0 h-[2px] bg-amber-500" />}
                   </>
                 )}
               </NavLink>
-              <NavLink to="/events" className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
+              <NavLink to="/releases" className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
                 {({ isActive }) => (
                   <>
-                    <Sparkles size={13} /> Events
-                    {isActive && <motion.div layoutId="navUnderline" className="absolute bottom-[-14px] left-0 right-0 h-[2px] bg-amber-500" />}
-                  </>
-                )}
-              </NavLink>
-              <NavLink to="/plays" className={({ isActive }) => `${linkBaseStyle} ${isActive ? "text-amber-500" : isDarkMode ? "text-slate-300" : "text-stone-600"}`}>
-                {({ isActive }) => (
-                  <>
-                    <Theater size={13} /> Plays
+                    <Sparkles size={13} /> Releases
                     {isActive && <motion.div layoutId="navUnderline" className="absolute bottom-[-14px] left-0 right-0 h-[2px] bg-amber-500" />}
                   </>
                 )}
