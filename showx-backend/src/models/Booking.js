@@ -25,14 +25,25 @@ const bookingSchema = new mongoose.Schema(
       required: [true, "Total amount is required"],
     },
     status: {
+      // "pending"   -> booking created, seats held, payment not yet verified
+      // "confirmed" -> payment verified successfully
+      // "cancelled" -> payment failed / abandoned / user cancelled
       type: String,
-      enum: ["confirmed", "cancelled"],
-      default: "confirmed",
+      enum: ["pending", "confirmed", "cancelled"],
+      default: "pending",
     },
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "failed"],
       default: "pending",
+    },
+    razorpayOrderId: {
+      type: String,
+      default: null,
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

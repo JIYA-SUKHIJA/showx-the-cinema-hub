@@ -35,6 +35,48 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
+// @desc    Get last 7 days booking trend
+// @route   GET /api/admin/weekly-trend
+// @access  Admin only
+export const getWeeklyTrend = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const bookings = await Booking.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const result = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
+      const found = bookings.find((b) => b._id === dateStr);
+      result.push({ name: dayLabel, traffic: found ? found.count : 0 });
+    }
+
+    res.status(200).json({
+      success: true,
+      trend: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching weekly trend",
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Get all bookings (of every user)
 // @route   GET /api/admin/bookings
 // @access  Admin only

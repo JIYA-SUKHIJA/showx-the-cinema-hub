@@ -44,6 +44,9 @@ export const createOrder = async (req, res) => {
 
     const order = await razorpayInstance.orders.create(options);
 
+    booking.razorpayOrderId = order.id;
+    await booking.save();
+
     res.status(200).json({
       success: true,
       order,
@@ -85,20 +88,29 @@ export const verifyPayment = async (req, res) => {
 
     const isSignatureValid = generatedSignature === razorpay_signature;
 
-    if (!isSignatureValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Payment verification failed — invalid signature",
-      });
-    }
-
     const booking = await Booking.findById(bookingId);
 
     if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
+    if (!isSignatureValid) {
+      // Signature mismatch means this payment can't be trusted — do NOT
+      // confirm the booking. Mark it failed so it's clearly distinguishable
+      // from a booking that's still awaiting payment.
+      booking.paymentStatus = "failed";
+      await booking.save();
+
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed — invalid signature",
+      });
+    }
+
+    // Only now, after the signature is verified, do we confirm the booking.
     booking.paymentStatus = "paid";
+    booking.status = "confirmed";
+    booking.razorpayPaymentId = razorpay_payment_id;
     await booking.save();
 
     res.status(200).json({

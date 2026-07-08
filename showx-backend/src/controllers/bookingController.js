@@ -2,6 +2,36 @@ import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 
+// How long an unpaid "pending" booking is allowed to hold its seats before
+// it's treated as abandoned and automatically released.
+const PENDING_BOOKING_TTL_MINUTES = 10;
+
+// Finds pending bookings older than the TTL, cancels them, and frees up
+// the seats they were holding on the related Show. Runs inline before a
+// new booking is created so stale holds never block a real user.
+const releaseStaleBookings = async (session) => {
+  const cutoff = new Date(Date.now() - PENDING_BOOKING_TTL_MINUTES * 60 * 1000);
+
+  const staleBookings = await Booking.find({
+    status: "pending",
+    createdAt: { $lt: cutoff },
+  }).session(session);
+
+  for (const stale of staleBookings) {
+    stale.status = "cancelled";
+    stale.paymentStatus = "failed";
+    await stale.save({ session });
+
+    const show = await Show.findById(stale.show).session(session);
+    if (show) {
+      show.bookedSeats = show.bookedSeats.filter(
+        (seat) => !stale.seats.includes(seat)
+      );
+      await show.save({ session });
+    }
+  }
+};
+
 export const createBooking = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -16,6 +46,10 @@ export const createBooking = async (req, res) => {
         message: "Show ID and at least one seat are required",
       });
     }
+
+    // Release any abandoned pending bookings first, so their seats become
+    // available again before we check availability below.
+    await releaseStaleBookings(session);
 
     const show = await Show.findById(showId).session(session);
 
@@ -48,11 +82,16 @@ export const createBooking = async (req, res) => {
           show: showId,
           seats,
           totalAmount,
+          status: "pending",        // seats are held, but not confirmed yet
+          paymentStatus: "pending",
         },
       ],
       { session }
     );
 
+    // Seats are provisionally held here to prevent double-booking while the
+    // user is on the payment screen. If payment isn't completed within
+    // PENDING_BOOKING_TTL_MINUTES, releaseStaleBookings() frees them again.
     show.bookedSeats.push(...seats);
     await show.save({ session });
 
@@ -61,7 +100,7 @@ export const createBooking = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Booking confirmed successfully",
+      message: "Booking created — awaiting payment",
       booking: booking[0],
     });
   } catch (error) {

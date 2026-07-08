@@ -6,13 +6,15 @@ import {
   updateTheatre,
   deleteTheatre,
 } from "../controllers/theatreController.js";
+import protect from "../middleware/authMiddleware.js";
+import isAdmin from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", createTheatre);
+router.post("/", protect, isAdmin, createTheatre);
 router.get("/", getTheatres);
 router.get("/:id", getTheatreById);
-router.put("/:id", updateTheatre);
-router.delete("/:id", deleteTheatre);
+router.put("/:id", protect, isAdmin, updateTheatre);
+router.delete("/:id", protect, isAdmin, deleteTheatre);
 
 export default router;
