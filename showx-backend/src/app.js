@@ -13,6 +13,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import cityRoutes from "./routes/cityRoutes.js";
+import newsletterRoutes from "./routes/newsletterRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -48,7 +49,10 @@ app.use(
   })
 );
 
-app.use(express.json());
+// Default express.json() body limit is only 100kb, which is too small for
+// base64-encoded profile photos (a 2MB image becomes ~2.7MB as base64 text).
+// Raised to 5mb to comfortably fit avatar uploads with headroom.
+app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
@@ -60,6 +64,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/cities", cityRoutes);
+app.use("/api/newsletter", newsletterRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

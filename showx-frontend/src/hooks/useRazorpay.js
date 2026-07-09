@@ -50,38 +50,11 @@ export function useRazorpay() {
       description: 'Movie Ticket Reservation Checkout',
       order_id: paymentConfig.orderId, 
 
-      // Explicitly enable every payment method, including UPI with its QR
-      // code option. Without this block Razorpay sometimes hides UPI in
-      // test-mode checkouts depending on account/browser defaults.
-      method: {
-        netbanking: true,
-        card: true,
-        upi: true,
-        wallet: true,
-        paylater: true,
-      },
-      config: {
-        display: {
-          blocks: {
-            upi: {
-              name: "Pay via UPI",
-              instruments: [
-                { method: "upi", flows: ["qr", "collect", "intent"] },
-              ],
-            },
-            other: {
-              name: "Other Payment Methods",
-              instruments: [
-                { method: "card" },
-                { method: "netbanking" },
-                { method: "wallet" },
-              ],
-            },
-          },
-          sequence: ["block.upi", "block.other"],
-          preferences: { show_default_blocks: false },
-        },
-      },
+      // No forced method/display config here — Razorpay shows whatever
+      // payment methods are actually enabled on the connected account
+      // (Cards, Netbanking, Wallets, and UPI once the account is fully
+      // activated). Forcing a UPI block when it isn't enabled just shows
+      // an empty section, so we let Razorpay decide instead.
 
       handler: function (response) {
         onSuccessCallback({
@@ -96,7 +69,7 @@ export function useRazorpay() {
         contact: paymentConfig.user?.contact || '',
       },
       theme: {
-        color: '#d97706', // Premium Boutique Amber Gold Theme Hex Token
+        color: '#d97706',
       },
     };
 

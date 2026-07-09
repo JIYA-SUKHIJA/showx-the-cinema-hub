@@ -15,6 +15,10 @@ const theatreSchema = new mongoose.Schema(
       type: String,
       required: [true, "City is required"],
     },
+    image: {
+      type: String,
+      default: "",
+    },
     formats: {
       type: [String],
       default: [],

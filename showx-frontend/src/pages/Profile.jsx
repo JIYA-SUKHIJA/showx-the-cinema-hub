@@ -14,6 +14,14 @@ import { showxToast } from '../utils/toastConfig';
 import axiosInstance from '../services/axiosInstance';
 import { fetchMyBookings } from '../services/api';
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 export default function Profile() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
@@ -41,7 +49,6 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('info');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  // Time based dynamic premium greeting allocation nodes
   useEffect(() => {
     const hours = new Date().getHours();
     if (hours < 12) setTimeGreeting("Good morning");
@@ -61,9 +68,6 @@ export default function Profile() {
 
         const bookingsData = await fetchMyBookings();
         const count = bookingsData.length;
-        
-        // Sakshi MCA GU ke feedback ke hisab se customized membership triggers:
-        // 3 bookings par Silver aur 6 ya usse zyada bookings par Gold card change hoga.
         const membership = count >= 6 ? 'Gold' : count >= 3 ? 'Silver' : 'Standard';
 
         const updatedUser = {
@@ -102,10 +106,8 @@ export default function Profile() {
         setBookingsLoading(true);
         const data = await fetchMyBookings();
         const count = data.length;
-        
-        // Tab synchronization parameters checking rules:
         const membership = count >= 6 ? 'Gold' : count >= 3 ? 'Silver' : 'Standard';
-        
+
         setMyBookings(data);
         setUser((prev) => ({ ...prev, totalBookings: count, membership }));
         setBookingsLoading(false);
@@ -124,22 +126,23 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadingPhoto(true);
-    const localPreviewUrl = URL.createObjectURL(file);
-    setUser(prev => ({ ...prev, avatar: localPreviewUrl }));
+    if (file.size > 2 * 1024 * 1024) {
+      showxToast.error("Please choose an image under 2MB.");
+      return;
+    }
 
+    setUploadingPhoto(true);
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      
-      await axiosInstance.put('/auth/profile/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      showxToast.adminSuccess("Profile identity photo synchronized successfully");
+      const dataUrl = await fileToDataUrl(file);
+
+      setUser((prev) => ({ ...prev, avatar: dataUrl }));
+
+      await axiosInstance.put('/auth/profile', { avatar: dataUrl });
+
+      showxToast.adminSuccess("Profile photo updated successfully");
     } catch (err) {
-      console.error("File transmission failure:", err);
-      showxToast.error("Failed to map image attachment stream to backend pipeline.");
+      console.error("Avatar upload failed:", err);
+      showxToast.error("Failed to update profile photo. Please try again.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -197,7 +200,6 @@ export default function Profile() {
     }`}>
       <div className="max-w-5xl mx-auto space-y-8">
         
-        {/* --- BRAND BLOCK CONTAINER HEADER --- */}
         <div className={`relative overflow-hidden rounded-3xl p-6 sm:p-8 border transition-all duration-300 ${
           isDarkMode 
             ? "bg-slate-950/90 border-white/[0.04] shadow-2xl shadow-black/60" 
@@ -233,6 +235,13 @@ export default function Profile() {
                   />
                   <Camera size={12} strokeWidth={2.5} className={uploadingPhoto ? "animate-spin" : ""} />
                 </label>
+
+                {/* Visible size limit hint — so the user knows the limit
+                    BEFORE picking a file, instead of only finding out via
+                    an error toast after selecting an oversized image. */}
+                <p className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold text-slate-500 font-mono">
+                  Max photo size: 2MB
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -267,13 +276,10 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* --- GRID PLATFORM LAYOUT DECK --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* --- SIDE NAVIGATION DECK ARRAYS --- */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* Membership Card with automatic shine tier layout */}
             <div className="relative aspect-[1.58/1] w-full rounded-2xl overflow-hidden p-5 bg-gradient-to-br from-slate-900 via-stone-900 to-slate-950 border border-amber-500/20 shadow-2xl flex flex-col justify-between group select-none animate-shimmer-sweep">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full filter blur-2xl pointer-events-none group-hover:bg-amber-500/10 transition-colors" />
               <div className="flex justify-between items-start">
@@ -292,7 +298,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
             <div className={`rounded-2xl border p-1.5 space-y-0.5 ${
               isDarkMode ? "bg-slate-900/30 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm"
             }`}>
@@ -324,7 +329,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* --- DISPLAY CONTENT MATRICES PANELS --- */}
           <div className="lg:col-span-8">
             <div className={`border shadow-2xl rounded-2xl p-6 sm:p-8 min-h-[480px] transition-colors duration-300 ${
               isDarkMode ? "bg-slate-950/90 border-white/[0.04] shadow-black/40" : "bg-white border-slate-200"

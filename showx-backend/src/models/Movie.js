@@ -29,10 +29,10 @@ const movieSchema = new mongoose.Schema(
       type: String,
       default: "center",
     },
-    genre: {
-      type: String,
-      required: [true, "Genre is required"],
-    },
+   genre: {
+      type: [String],
+       required: [true, "Genre is required"],
+         },
     rating: {
       type: String,
       default: "8.0",

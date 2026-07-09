@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import Navbar from '../organisms/Navbar';
 import Footer from '../organisms/Footer';
+import ScrollToTop from '../../utils/ScrollToTop';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function MainLayout() {
@@ -11,7 +12,6 @@ export default function MainLayout() {
   const { isDarkMode } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Monitor layout scroll offset vectors to inject glass classes to global navigation shell
   useEffect(() => {
     const handleLayoutScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -20,7 +20,6 @@ export default function MainLayout() {
     return () => window.removeEventListener('scroll', handleLayoutScroll);
   }, []);
 
-  // Structural scroll position trackers for the header premium progress strip
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -33,13 +32,13 @@ export default function MainLayout() {
       isDarkMode ? "bg-[#060911] text-white" : "bg-slate-50 text-slate-900"
     }`}>
       
-      {/* Premium System Layout Reading Indicator */}
+      <ScrollToTop />
+
       <motion.div 
         className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 z-[100] transform-origin-0" 
         style={{ scaleX }} 
       />
 
-      {/* Decorative Dynamic Ambient Mesh Glow Filters (Only rendered during dark theme configurations) */}
       {isDarkMode && (
         <div className="absolute top-0 inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-600/[0.03] rounded-full blur-[120px]" />
@@ -47,7 +46,6 @@ export default function MainLayout() {
         </div>
       )}
 
-      {/* Embedded dynamic class layouts passed down implicitly via scroll vectors */}
       <div className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled 
           ? "backdrop-blur-xl border-b bg-slate-950/75 border-slate-900/80 shadow-md shadow-black/10" 
@@ -56,7 +54,6 @@ export default function MainLayout() {
         <Navbar />
       </div>
       
-      {/* Fluid Main Dashboard Canvas Wrapper */}
       <main className="flex-grow z-10 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-8 relative">
         <AnimatePresence mode="wait">
           <motion.div

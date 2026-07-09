@@ -36,7 +36,9 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
   };
 
   const formatsList = item.format ? item.format.split('/').map(f => f.trim()) : ['2D'];
-  const genreList = item.genre ? item.genre.split('•').map(g => g.trim()) : ['Entertainment'];
+  const genreList = Array.isArray(item.genre) 
+  ? item.genre 
+  : (item.genre ? item.genre.split('•').map(g => g.trim()) : ['Entertainment']);
 
   return (
     <motion.div

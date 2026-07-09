@@ -8,6 +8,13 @@ import { useTheme } from '../context/ThemeContext';
 import { MovieCardSkeleton } from '../components/atoms/Skeletons';
 import { fetchAllMovies } from '../services/api';
 
+// Fixed genre categories — matches the standardized values set by migrateGenres.js
+const FIXED_GENRES = [
+  'Action', 'Comedy', 'Drama', 'Thriller', 'Horror',
+  'Romance', 'Sci-Fi', 'Animation', 'Family', 'Sports',
+  'Adventure', 'Crime', 'War',
+];
+
 export default function MovieListing() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
@@ -17,9 +24,8 @@ export default function MovieListing() {
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [loading, setLoading] = useState(true);
   const [allMovies, setAllMovies] = useState([]);
+  const [showAllGenres, setShowAllGenres] = useState(false);
 
-  // Re-fetch whenever the ?search= query param in the URL changes —
-  // this is what actually connects the search bar to this page.
   useEffect(() => {
     setLoading(true);
     fetchAllMovies(searchQuery)
@@ -27,10 +33,16 @@ export default function MovieListing() {
       .finally(() => setLoading(false));
   }, [searchQuery]);
 
-  const genres = ['All', ...Array.from(new Set(allMovies.map((m) => m.genre).filter(Boolean)))];
-  const filteredMovies = selectedGenre === 'All' 
-    ? allMovies 
-    : allMovies.filter(m => m.genre === selectedGenre);
+  // Only show genre chips that actually have at least one movie
+  const activeGenres = FIXED_GENRES.filter((g) =>
+    allMovies.some((m) => Array.isArray(m.genre) && m.genre.includes(g))
+  );
+  const genres = ['All', ...activeGenres];
+  const visibleGenres = showAllGenres ? genres : genres.slice(0, 9);
+
+  const filteredMovies = selectedGenre === 'All'
+    ? allMovies
+    : allMovies.filter((m) => Array.isArray(m.genre) && m.genre.includes(selectedGenre));
 
   return (
     <div className="space-y-10">
@@ -62,7 +74,7 @@ export default function MovieListing() {
       {/* Chips Filter Matrix */}
       <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6 transition-colors duration-300 ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
         <div className="flex flex-wrap items-center gap-2">
-          {genres.map((genre) => (
+          {visibleGenres.map((genre) => (
             <button
               key={genre}
               onClick={() => setSelectedGenre(genre)}
@@ -77,6 +89,18 @@ export default function MovieListing() {
               {genre}
             </button>
           ))}
+          {genres.length > 9 && (
+            <button
+              onClick={() => setShowAllGenres((prev) => !prev)}
+              className={`px-4 py-2 text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer ${
+                isDarkMode
+                  ? "bg-white/[0.02] text-gold border-white/[0.05] hover:border-white/20"
+                  : "bg-slate-100 text-amber-600 border-slate-200 hover:border-slate-400"
+              }`}
+            >
+              {showAllGenres ? 'Show Less' : `+${genres.length - 9} More`}
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 text-xs font-bold text-slate-500 font-mono">
           <LayoutGrid size={14} className="text-gold" />

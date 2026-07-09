@@ -52,6 +52,7 @@ const EMPTY_THEATRE_FORM = {
   location: '',
   city: '',
   formats: '',
+  image: '',
 };
 
 const EMPTY_SHOW_FORM = {
@@ -326,6 +327,7 @@ export default function AdminDashboard() {
       location: theatre.location || '',
       city: theatre.city || '',
       formats: Array.isArray(theatre.formats) ? theatre.formats.join(', ') : '',
+      image: theatre.image || '',
     });
     setShowTheatreForm(true);
   };
@@ -339,6 +341,7 @@ export default function AdminDashboard() {
         location: theatreForm.location,
         city: theatreForm.city,
         formats: theatreForm.formats.split(',').map((f) => f.trim()).filter(Boolean),
+        image: theatreForm.image,
       };
       if (editingTheatreId) {
         const updated = await updateTheatreAdmin(editingTheatreId, payload);
@@ -708,6 +711,10 @@ export default function AdminDashboard() {
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">formats (comma split)</label>
                 <input value={theatreForm.formats} onChange={(e) => setTheatreForm((prev) => ({ ...prev, formats: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50 font-mono" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-slate-500 font-mono">image url</label>
+                <input value={theatreForm.image} onChange={(e) => setTheatreForm((prev) => ({ ...prev, image: e.target.value }))} className="w-full bg-[#0a0a0c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#FF9F00]/50" placeholder="https://images.unsplash.com/..." />
               </div>
               <button type="submit" disabled={savingTheatre} className="w-full py-3 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50 cursor-pointer shadow-md shadow-[#FF9F00]/10 border-none">
                 {savingTheatre ? 'Syncing matrix logs...' : editingTheatreId ? 'Commit Modifications' : 'Commit Matrix Entry'}

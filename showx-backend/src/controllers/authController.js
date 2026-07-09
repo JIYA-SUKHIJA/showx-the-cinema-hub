@@ -1,15 +1,12 @@
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
-// Helper function: sends the JWT as an HTTP-only cookie.
-// HTTP-only means JavaScript in the browser CANNOT read this cookie —
-// it's only sent automatically with requests, protecting against XSS attacks.
 const sendTokenCookie = (res, token) => {
   res.cookie("token", token, {
-    httpOnly: true, // JS can't access this cookie
-    secure: process.env.NODE_ENV === "production", // only sent over HTTPS in production
-    sameSite: "strict", // cookie only sent for same-site requests (CSRF protection)
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
@@ -19,7 +16,6 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Basic validation: make sure all fields were sent
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -27,7 +23,6 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Check if a user with this email already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
@@ -36,16 +31,11 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Create the user. The password hashing happens AUTOMATICALLY
-    // because of the pre("save") hook we wrote in User.js — we never
-    // have to manually hash it here.
     const user = await User.create({ name, email, password });
 
-    // Generate a JWT for this new user so they're logged in immediately after registering
     const token = generateToken(user._id);
     sendTokenCookie(res, token);
 
-    // Respond with user info (no password, since schema has select:false)
     res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -54,6 +44,8 @@ export const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
+        phone: user.phone,
       },
     });
   } catch (error) {
@@ -78,8 +70,6 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // We need .select("+password") because our schema hides password by default (select: false).
-    // Here we explicitly ask for it since we need to compare it.
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -89,7 +79,6 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Use the instance method we defined in User.js to compare passwords
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -110,6 +99,8 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
+        phone: user.phone,
       },
     });
   } catch (error) {
@@ -124,8 +115,6 @@ export const loginUser = async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Private
 export const logoutUser = (req, res) => {
-  // Overwrite the cookie with an empty value and immediate expiry,
-  // which effectively deletes it from the browser.
   res.cookie("token", "", {
     httpOnly: true,
     expires: new Date(0),
@@ -138,9 +127,8 @@ export const logoutUser = (req, res) => {
 };
 
 // @route   GET /api/auth/profile
-// @access  Private (requires the 'protect' middleware)
+// @access  Private
 export const getProfile = async (req, res) => {
-  // req.user was already attached by our authMiddleware.js after verifying the JWT
   res.status(200).json({
     success: true,
     user: req.user,
@@ -160,13 +148,17 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Only update fields that were actually sent in the request body.
-    // This allows partial updates (e.g. updating just the name).
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 
-    // If a new password was sent, this triggers our pre("save") hook
-    // in User.js to hash it automatically.
+    if (req.body.phone !== undefined) {
+      user.phone = req.body.phone;
+    }
+
+    if (req.body.avatar !== undefined) {
+      user.avatar = req.body.avatar;
+    }
+
     if (req.body.password) {
       user.password = req.body.password;
     }
@@ -181,6 +173,8 @@ export const updateProfile = async (req, res) => {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        avatar: updatedUser.avatar,
+        phone: updatedUser.phone,
       },
     });
   } catch (error) {
