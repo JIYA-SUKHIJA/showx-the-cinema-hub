@@ -30,12 +30,21 @@
 }
 
 /* Base structural setups */
+/* Base structural setups */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
 }
 
+#root {
+  overflow-x: hidden;
+}
 /* Custom Hardware-Accelerated Premium Cinematic Micro-Animations */
 @keyframes kenBurnsLoop {
   0% { transform: scale(1) translate(0, 0); }
