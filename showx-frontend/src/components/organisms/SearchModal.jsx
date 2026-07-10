@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X, Clock, Flame, Film, Loader2 } from 'lucide-react';
 import axiosInstance from '../../services/axiosInstance';
 
@@ -105,7 +106,7 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-start justify-center pt-8 sm:pt-20 px-4">
       <div className="absolute inset-0" onClick={onClose} />
 
@@ -256,6 +257,7 @@ export default function SearchModal({ isOpen, onClose, onSearchSubmit }) {
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

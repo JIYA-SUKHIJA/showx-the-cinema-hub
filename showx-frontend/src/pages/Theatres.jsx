@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Building, MapPin, Clapperboard } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Building, MapPin, Clapperboard, ChevronLeft } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import axiosInstance from '../services/axiosInstance';
 
 export default function Theatres() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  const [searchParams] = useSearchParams();
+  const requestedTheatreId = searchParams.get('theatreId');
+
   const [theatres, setTheatres] = useState([]);
   const [selectedTheatre, setSelectedTheatre] = useState(null);
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showsLoading, setShowsLoading] = useState(false);
   const [selectedCity, setSelectedCity] = useState('All');
+  const showsSectionRef = useRef(null);
 
   useEffect(() => {
     axiosInstance.get('/theatres')
@@ -31,6 +35,27 @@ export default function Theatres() {
     }
   };
 
+  // If we arrived here with ?theatreId=... (e.g. clicked a theatre card on
+  // Home), auto-select that theatre once the theatre list has loaded.
+  useEffect(() => {
+    if (!loading && requestedTheatreId && theatres.length > 0 && !selectedTheatre) {
+      const match = theatres.find((t) => t._id === requestedTheatreId);
+      if (match) {
+        openTheatre(match);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, requestedTheatreId, theatres]);
+
+  // Only scroll when the user clicks a card themselves on this page —
+  // deep-linked visits render the shows section directly at the top instead,
+  // so no scroll/jump is needed at all.
+  useEffect(() => {
+    if (selectedTheatre && !requestedTheatreId && showsSectionRef.current) {
+      showsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedTheatre, requestedTheatreId]);
+
   // Unique city list derived from the theatres themselves
   const cities = ['All', ...Array.from(new Set(theatres.map((t) => t.city).filter(Boolean)))];
 
@@ -38,6 +63,55 @@ export default function Theatres() {
     ? theatres
     : theatres.filter((t) => t.city === selectedCity);
 
+  const isDeepLinkedView = Boolean(requestedTheatreId) && Boolean(selectedTheatre);
+
+  // ===== Deep-linked view: show ONLY the shows for that theatre, no grid, no scroll jump =====
+  if (isDeepLinkedView) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => navigate('/theatres')}
+          className={`flex items-center gap-1.5 text-xs font-black uppercase tracking-wider cursor-pointer bg-transparent border-none ${
+            isDarkMode ? "text-slate-400 hover:text-amber-500" : "text-stone-500 hover:text-amber-700"
+          }`}
+        >
+          <ChevronLeft size={14} /> All Theatres
+        </button>
+
+        <h2 className={`text-xl font-black ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          Shows at {selectedTheatre.name}
+        </h2>
+
+        {showsLoading ? (
+          <p className="text-sm text-slate-500">Loading shows...</p>
+        ) : shows.length === 0 ? (
+          <p className="text-sm text-slate-500">No shows scheduled at this theatre yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {shows.map((s) => (
+              <div key={s._id} className={`flex items-center justify-between p-4 rounded-xl border ${isDarkMode ? "bg-slate-900/40 border-white/[0.06]" : "bg-white border-slate-200"}`}>
+                <div className="flex items-center gap-3">
+                  <Clapperboard size={18} className="text-amber-500" />
+                  <div>
+                    <p className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>{s.movie?.title}</p>
+                    <p className="text-xs text-slate-500">{s.format} • {s.showTime} • ₹{s.price}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate(`/booking/${s.movie?._id}/shows`)}
+                  className="px-4 py-2 bg-amber-500 text-stone-950 text-xs font-black rounded-lg"
+                >
+                  Book Show
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ===== Normal view: full theatre grid + city filter =====
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -68,7 +142,7 @@ export default function Theatres() {
         </div>
       </div>
 
-      {loading ? (
+      {loading || (requestedTheatreId && !selectedTheatre) ? (
         <p className="text-sm text-slate-500">Loading theatres...</p>
       ) : filteredTheatres.length === 0 ? (
         <p className="text-sm text-slate-500">No theatres found in {selectedCity}.</p>
@@ -108,8 +182,8 @@ export default function Theatres() {
         </div>
       )}
 
-      {selectedTheatre && (
-        <div className="space-y-4">
+      {selectedTheatre && !requestedTheatreId && (
+        <div ref={showsSectionRef} className="space-y-4 scroll-mt-24">
           <h2 className={`text-xl font-black ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Shows at {selectedTheatre.name}
           </h2>

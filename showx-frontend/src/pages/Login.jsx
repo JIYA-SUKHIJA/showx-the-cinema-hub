@@ -163,31 +163,7 @@ const Login = () => {
         </button>
       </form>
 
-      {/* Premium Google Authentication Row Connector Grid */}
-      <div className="relative my-6 flex items-center justify-center">
-        <div className={`w-full border-t ${isDarkMode ? "border-white/5" : "border-stone-200"}`}></div>
-        <span className={`absolute px-3 text-[10px] font-black tracking-widest uppercase ${isDarkMode ? "bg-[#0B0D13] text-slate-600" : "bg-white text-slate-400"}`}>
-          or connect via
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3">
-        <button
-          type="button"
-          onClick={() => setToast({ message: "Google OAuth integration is ready.", type: 'success' })}
-          className={`w-full flex items-center justify-center gap-2.5 rounded-xl border py-3 text-xs font-bold shadow-sm transition active:scale-[0.99] cursor-pointer ${
-            isDarkMode ? "bg-white/[0.02] border-white/10 text-white hover:bg-white/[0.05]" : "bg-stone-50 border-stone-200 text-slate-700 hover:bg-stone-100"
-          }`}
-        >
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-            <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.33 0 3.324 2.69 1.332 6.614l3.934 3.151z"/>
-            <path fill="#4285F4" d="M23.91 12.273c0-.818-.073-1.609-.209-2.373H12v4.582h6.69A5.717 5.717 0 0 1 16.2 18.264l3.855 2.99C22.31 19.173 23.91 16.027 23.91 12.273z"/>
-            <path fill="#FBBC05" d="M5.266 14.235L1.332 17.386A11.947 11.947 0 0 0 12 24c3.055 0 5.782-1.009 7.745-2.745l-3.855-2.99a7.062 7.062 0 0 1-3.89 1.1c-3.627 0-6.734-2.455-7.834-5.875z"/>
-            <path fill="#34A853" d="M1.332 6.614A11.928 11.928 0 0 0 0 12c0 1.93.455 3.748 1.255 5.386l4.01-3.151A7.027 7.027 0 0 1 4.91 12c0-1.6.536-3.082 1.436-4.295L1.332 6.614z"/>
-          </svg>
-          <span>Continue with Google</span>
-        </button>
-
+      <div className="grid grid-cols-1 gap-3 mt-6">
         <button
           type="button"
           onClick={() => {

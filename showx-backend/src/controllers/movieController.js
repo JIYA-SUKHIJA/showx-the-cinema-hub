@@ -25,9 +25,9 @@ export const getMovies = async (req, res) => {
 
     const filter = { isActive: true, type: "movie" };
 
-    if (search) {
-      filter.$text = { $search: search };
-    }
+     if (search) {
+       filter.title = { $regex: search, $options: "i" };
+     }
 
     if (genre) {
       filter.genre = { $regex: genre, $options: "i" };

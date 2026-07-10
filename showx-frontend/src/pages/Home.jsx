@@ -216,11 +216,11 @@ export default function Home() {
             Array.from({ length: 2 }).map((_, idx) => <MovieCardSkeleton key={idx} />)
           ) : (
             theatres.map((t, idx) => (
-              <button
+             <button
                 key={t._id}
-                onClick={() => navigate('/theatres')}
+                    onClick={() => navigate(`/theatres?theatreId=${t._id}`)}
                 className="relative text-left rounded-3xl overflow-hidden border border-white/[0.08] group h-52 shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-              >
+                >
                 <img
                   src={THEATRE_BG_IMAGES[idx % THEATRE_BG_IMAGES.length]}
                   alt={t.name}

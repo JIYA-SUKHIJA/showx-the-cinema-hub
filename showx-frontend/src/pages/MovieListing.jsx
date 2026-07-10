@@ -74,10 +74,16 @@ export default function MovieListing() {
       {/* Chips Filter Matrix */}
       <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6 transition-colors duration-300 ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
         <div className="flex flex-wrap items-center gap-2">
-          {visibleGenres.map((genre) => (
+         {visibleGenres.map((genre) => (
             <button
-              key={genre}
-              onClick={() => setSelectedGenre(genre)}
+                key={genre}
+              onClick={() => {
+                 if (genre === 'All' && searchQuery) {
+                navigate('/movies');
+                } else {
+             setSelectedGenre(genre);
+      }
+    }}
               className={`px-4 py-2 text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer ${
                 selectedGenre === genre
                   ? "bg-gold text-slate-950 border-transparent shadow-[0_4px_15px_rgba(244,197,66,0.25)]"
