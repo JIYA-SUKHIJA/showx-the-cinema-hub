@@ -475,24 +475,24 @@ export default function AdminDashboard() {
         setActiveTab={setActiveTab}
       />
 
-      <main className={`flex-grow flex flex-col h-screen overflow-hidden bg-gradient-to-br ${
+      <main className={`flex-grow flex flex-col h-screen overflow-hidden bg-gradient-to-br min-w-0 ${
         isDarkMode ? "from-[#060608] via-[#08080c] to-[#0b0c10]" : "from-[#FAFAF8] via-[#F5F3EC] to-[#EAE7DC]"
       }`}>
         
         {/* --- PREMIUM NAVIGATION CONTROL PANEL --- */}
-        <header className={`h-20 border-b flex items-center px-10 justify-between shrink-0 backdrop-blur-xl z-30 transition-all ${
+        <header className={`h-16 sm:h-20 border-b flex items-center px-4 sm:px-10 justify-between shrink-0 backdrop-blur-xl z-30 transition-all gap-2 ${
           isDarkMode ? "bg-[#060608]/40 border-white/[0.04]" : "bg-[#FAFAF8]/60 border-stone-200/60 shadow-sm"
         }`}>
-          <div className="space-y-0.5">
-            <h1 className="text-[10px] font-black font-mono tracking-[0.25em] uppercase text-[#FF9F00] flex items-center gap-1.5">
-              <Layers size={11} /> {activeTab} Console Node
+          <div className="space-y-0.5 min-w-0">
+            <h1 className="text-[10px] font-black font-mono tracking-[0.25em] uppercase text-[#FF9F00] flex items-center gap-1.5 truncate">
+              <Layers size={11} className="shrink-0" /> <span className="truncate">{activeTab} Console Node</span>
             </h1>
             <p className={`text-[10px] font-medium hidden sm:block ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>
               {timeGreeting}, Admin — System metrics running nominal.
             </p>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             <button 
               onClick={toggleTheme}
               aria-label="Toggle system layout theme alignment"
@@ -505,7 +505,7 @@ export default function AdminDashboard() {
               {isDarkMode ? <Sun size={14} strokeWidth={2.5} /> : <Moon size={14} strokeWidth={2.5} />}
             </button>
 
-            <div className={`flex items-center gap-2.5 px-4 py-2 rounded-xl border shadow-inner transition-all ${
+            <div className={`hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl border shadow-inner transition-all ${
               isDarkMode ? "bg-[#111114]/80 border-white/[0.04] focus-within:border-[#FF9F00]/40" : "bg-white border-stone-200 focus-within:border-[#FF9F00]/50"
             }`}>
               <Search size={14} className="text-slate-500" />
@@ -513,7 +513,7 @@ export default function AdminDashboard() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter index rows..."
-                className={`bg-transparent text-[11px] font-medium outline-none w-36 placeholder-slate-500 font-mono ${isDarkMode ? "text-white" : "text-slate-800"}`}
+                className={`bg-transparent text-[11px] font-medium outline-none w-28 lg:w-36 placeholder-slate-500 font-mono ${isDarkMode ? "text-white" : "text-slate-800"}`}
               />
             </div>
 
@@ -530,7 +530,7 @@ export default function AdminDashboard() {
                 {showNotifMenu && (
                   <motion.div
                     initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    className={`absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto border backdrop-blur-xl rounded-xl p-2 shadow-2xl z-50 no-scrollbar ${
+                    className={`absolute right-0 mt-3 w-72 sm:w-80 max-h-96 overflow-y-auto border backdrop-blur-xl rounded-xl p-2 shadow-2xl z-50 no-scrollbar ${
                       isDarkMode ? "bg-[#111114]/95 border-white/[0.06]" : "bg-white/95 border-stone-200"
                     }`}
                   >
@@ -555,7 +555,7 @@ export default function AdminDashboard() {
             <div className="relative">
               <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-1.5 cursor-pointer hover:bg-white/[0.03] px-2 py-1.5 rounded-xl border border-transparent transition-all">
                 <UserCircle size={20} className="text-[#FF9F00]" />
-                <ChevronDown size={12} className="text-slate-500" />
+                <ChevronDown size={12} className="text-slate-500 hidden sm:block" />
               </div>
               <AnimatePresence>
                 {showProfileMenu && (
@@ -576,7 +576,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* --- DYNAMIC RENDER ROUTE VIEW --- */}
-        <div className="flex-grow p-10 overflow-y-auto no-scrollbar relative z-10">
+        <div className="flex-grow p-4 sm:p-10 overflow-y-auto no-scrollbar relative z-10">
           <AnimatePresence mode="wait">
             {loading ? (
               <div className="space-y-8"><CardSkeleton /><TableSkeleton /></div>
@@ -626,8 +626,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* --- SOLID DEEP OBSIDIAN BLACK METRICS FOOTER --- */}
-        <footer className="h-16 border-t border-neutral-900 flex items-center px-10 justify-between bg-neutral-950 shrink-0 z-20 transition-colors duration-300">
-          <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-400 font-mono">
+        <footer className="h-auto sm:h-16 py-2 sm:py-0 border-t border-neutral-900 flex flex-col sm:flex-row items-center gap-2 sm:gap-0 px-4 sm:px-10 justify-between bg-neutral-950 shrink-0 z-20 transition-colors duration-300">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-8 text-[10px] font-black uppercase tracking-widest text-slate-400 font-mono">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" /> 
               Telemetry: Nominal
@@ -644,11 +644,11 @@ export default function AdminDashboard() {
       {/* --- FORM ENTRY DIALOG WRAPPERS --- */}
       <AnimatePresence>
         {showMovieForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.form
               initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
               onSubmit={handleSaveMovie}
-              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl text-white"
+              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-6 sm:p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl text-white"
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#FF9F00] font-mono">{editingMovieId ? 'Edit Movie Entry' : 'Add Movie Hub Node'}</h3>
@@ -686,11 +686,11 @@ export default function AdminDashboard() {
 
       <AnimatePresence>
         {showTheatreForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.form
               initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
               onSubmit={handleSaveTheatre}
-              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md shadow-2xl space-y-4 text-white"
+              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-6 sm:p-8 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl space-y-4 text-white"
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#FF9F00] font-mono">{editingTheatreId ? 'Modify Theatre Node' : 'Append Theatre Matrix'}</h3>
@@ -726,11 +726,11 @@ export default function AdminDashboard() {
 
       <AnimatePresence>
         {showShowForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.form
               initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
               onSubmit={handleSaveShow}
-              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl no-scrollbar text-white"
+              className="bg-[#111114] border border-white/[0.08] rounded-2xl p-6 sm:p-8 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl no-scrollbar text-white"
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#FF9F00] font-mono">{editingShowId ? 'Edit Performance Show' : 'Add Show Time Allocation'}</h3>
