@@ -28,10 +28,9 @@ export default function MainLayout() {
   });
 
   return (
-    <div className={`flex flex-col min-h-screen font-sans antialiased selection:bg-amber-500/30 selection:text-white transition-colors duration-300 relative ${
-      isDarkMode ? "bg-[#060911] text-white" : "bg-slate-50 text-slate-900"
-    }`}>
-      
+      <div className={`flex flex-col min-h-screen font-sans antialiased selection:bg-amber-500/30 selection:text-white transition-colors duration-300 relative overflow-x-hidden ${
+       isDarkMode ? "bg-[#060911] text-white" : "bg-slate-50 text-slate-900"
+       }`}>
       <ScrollToTop />
 
       <motion.div 
