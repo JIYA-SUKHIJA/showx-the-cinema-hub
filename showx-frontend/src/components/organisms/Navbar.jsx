@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Clapperboard, User, MapPin, ChevronDown, 
   Film, Building, Sparkles, ShieldCheck, Sun, Moon, 
-  LogOut, Ticket, HelpCircle, LogIn, Home, Bell
+  LogOut, Ticket, HelpCircle, LogIn, Home, Bell, Menu, X
 } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -19,6 +19,7 @@ export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -162,6 +163,13 @@ export default function Navbar() {
 
   const linkBaseStyle = "flex items-center gap-1.5 transition-all duration-300 relative py-1 px-1 rounded-md text-xs font-bold tracking-wide";
 
+  const mobileNavItems = [
+    { to: '/', end: true, icon: Home, label: 'Home' },
+    { to: '/movies', icon: Film, label: 'Movies' },
+    { to: '/theatres', icon: Building, label: 'Theatres' },
+    { to: '/releases', icon: Sparkles, label: 'Releases' },
+  ];
+
   return (
     <>
       <nav className={`sticky top-0 z-50 border-b backdrop-blur-2xl transition-all duration-300 ${
@@ -169,20 +177,31 @@ export default function Navbar() {
           ? "bg-slate-950/90 border-white/[0.04] shadow-[0_4px_30px_rgba(0,0,0,0.5)]" 
           : "bg-white/90 border-stone-200/60 shadow-[0_4px_30px_rgba(218,165,32,0.03)]"
       }`}>
-        <div className="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between gap-6">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-3 sm:gap-6">
           
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="relative">
+          {/* Mobile hamburger toggle */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`sm:hidden p-2.5 rounded-xl border cursor-pointer shrink-0 ${
+              isDarkMode ? "border-white/[0.06] bg-white/[0.02] text-slate-300" : "border-stone-200 bg-stone-50 text-stone-700"
+            }`}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
+            <div className="relative shrink-0">
               <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-500 flex items-center justify-center shadow-[0_4px_15px_rgba(218,165,32,0.2)] border border-amber-400/20 transition-transform duration-300 group-hover:scale-105">
                 <Clapperboard size={18} className="text-stone-950 fill-stone-950/10" strokeWidth={2.5} />
               </span>
               <div className="absolute inset-0 bg-amber-500 rounded-xl blur-md opacity-20 pointer-events-none group-hover:opacity-30 transition-opacity" />
             </div>
-            <span className={`font-display text-2xl tracking-tight font-black transition-colors ${
+            <span className={`font-display text-lg sm:text-2xl tracking-tight font-black transition-colors truncate ${
               isDarkMode ? "text-white" : "text-stone-900"
             }`}>
               Showx
-              <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 bg-clip-text text-transparent font-mono text-[10px] font-black tracking-widest uppercase ml-2 align-middle">
+              <span className="hidden sm:inline bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 bg-clip-text text-transparent font-mono text-[10px] font-black tracking-widest uppercase ml-2 align-middle">
                 — The CinemaHub
               </span>
             </span>
@@ -207,7 +226,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <button 
               onClick={() => setIsSearchOpen(true)}
               className={`md:hidden p-2.5 rounded-xl border cursor-pointer ${
@@ -217,15 +236,15 @@ export default function Navbar() {
               <Search size={15} strokeWidth={2.5} />
             </button>
 
-            <div className="relative">
+            <div className="relative hidden xs:block">
               <button 
                 onClick={() => setIsLocationOpen(!isLocationOpen)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                   isDarkMode ? "bg-white/[0.02] border-white/[0.05] text-slate-300" : "bg-stone-50 border-stone-200 text-stone-700"
                 }`}
               >
                 <MapPin size={14} className="text-amber-600" />
-                <span>{selectedCity || 'Karnal'}</span>
+                <span className="hidden sm:inline">{selectedCity || 'Karnal'}</span>
                 <ChevronDown size={12} className={`transition-transform duration-200 ${isLocationOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -263,7 +282,7 @@ export default function Navbar() {
 
             <button
               onClick={toggleTheme}
-              className={`p-2.5 rounded-xl border cursor-pointer ${isDarkMode ? "border-white/[0.06] bg-white/[0.02] text-amber-400" : "border-stone-200 bg-stone-50 text-stone-700"}`}
+              className={`hidden xs:flex p-2.5 rounded-xl border cursor-pointer ${isDarkMode ? "border-white/[0.06] bg-white/[0.02] text-amber-400" : "border-stone-200 bg-stone-50 text-stone-700"}`}
             >
               {isDarkMode ? <Sun size={15} strokeWidth={2.5} /> : <Moon size={15} strokeWidth={2.5} />}
             </button>
@@ -292,7 +311,7 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
-                        className={`absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto border rounded-2xl shadow-2xl z-20 ${
+                        className={`absolute right-0 mt-2 w-72 sm:w-80 max-h-96 overflow-y-auto border rounded-2xl shadow-2xl z-20 ${
                           isDarkMode ? "bg-slate-900 border-white/[0.06]" : "bg-white border-stone-200"
                         }`}
                       >
@@ -385,13 +404,14 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <Link to="/login" className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-amber-500 text-stone-950 hover:bg-amber-600 transition-colors shadow-md shadow-amber-500/10">
-                <LogIn size={14} strokeWidth={2.5} /> <span>Sign In</span>
+              <Link to="/login" className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-black bg-amber-500 text-stone-950 hover:bg-amber-600 transition-colors shadow-md shadow-amber-500/10 whitespace-nowrap">
+                <LogIn size={14} strokeWidth={2.5} /> <span className="hidden xs:inline">Sign In</span>
               </Link>
             )}
           </div>
         </div>
 
+        {/* Desktop nav row */}
         <div className={`border-t hidden sm:block ${isDarkMode ? "bg-slate-950/40 border-white/[0.02]" : "bg-stone-50/60 border-stone-200/40"}`}>
           <div className="max-w-[1440px] mx-auto px-6 h-12 flex items-center justify-between text-xs font-bold">
             <div className="flex items-center gap-6">
@@ -430,6 +450,88 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+
+        {/* Mobile slide-down menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className={`sm:hidden overflow-hidden border-t ${isDarkMode ? "bg-slate-950 border-white/[0.05]" : "bg-white border-stone-200"}`}
+            >
+              <div className="px-4 py-3 space-y-1">
+                {mobileNavItems.map(({ to, end, icon: Icon, label }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={end}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+                      isActive
+                        ? "bg-amber-500/10 text-amber-500"
+                        : isDarkMode ? "text-slate-300 hover:bg-white/[0.04]" : "text-stone-600 hover:bg-stone-100"
+                    }`}
+                  >
+                    <Icon size={16} /> {label}
+                  </NavLink>
+                ))}
+
+                <hr className={isDarkMode ? "border-white/[0.05] my-2" : "border-stone-100 my-2"} />
+
+                {/* City + Theme, shown here on mobile since they're hidden in the top bar below xs */}
+                <div className="flex items-center gap-2 px-3 py-1">
+                  <div className="relative flex-1">
+                    <button
+                      onClick={() => setIsLocationOpen(!isLocationOpen)}
+                      className={`w-full flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border cursor-pointer ${
+                        isDarkMode ? "bg-white/[0.02] border-white/[0.05] text-slate-300" : "bg-stone-50 border-stone-200 text-stone-700"
+                      }`}
+                    >
+                      <MapPin size={14} className="text-amber-600" />
+                      <span>{selectedCity || 'Karnal'}</span>
+                      <ChevronDown size={12} className={`ml-auto transition-transform duration-200 ${isLocationOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {isLocationOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          className={`mt-2 w-full border rounded-xl p-1.5 shadow-2xl ${
+                            isDarkMode ? "bg-slate-900 border-white/[0.06]" : "bg-white border-stone-200"
+                          }`}
+                        >
+                          {cities.map((city) => (
+                            <button
+                              key={city}
+                              onClick={() => {
+                                setSelectedCity(city);
+                                setIsLocationOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer border-none bg-transparent ${
+                                selectedCity === city ? "text-amber-600 bg-amber-500/10" : isDarkMode ? "text-slate-300" : "text-stone-600"
+                              }`}
+                            >
+                              {city}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className={`p-2.5 rounded-xl border cursor-pointer shrink-0 ${isDarkMode ? "border-white/[0.06] bg-white/[0.02] text-amber-400" : "border-stone-200 bg-stone-50 text-stone-700"}`}
+                  >
+                    {isDarkMode ? <Sun size={15} strokeWidth={2.5} /> : <Moon size={15} strokeWidth={2.5} />}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} onSearchSubmit={handleSearchSubmit} />
     </>
