@@ -10,8 +10,11 @@ export default function DataTable({ columns, data, onEdit, onDelete }) {
     <div className={`border rounded-2xl overflow-hidden shadow-xl transition-all duration-300 ${
       isDarkMode ? "bg-[#111114]/30 border-white/[0.04]" : "bg-white border-stone-200/80 shadow-stone-900/5"
     }`}>
+      <p className={`sm:hidden text-[9px] font-mono px-4 pt-3 pb-1 ${isDarkMode ? "text-slate-500" : "text-stone-400"}`}>
+        ← Swipe to see more →
+      </p>
       <div className="overflow-x-auto no-scrollbar">
-        <table className="w-full text-left border-collapse select-none">
+        <table className="w-full min-w-[700px] text-left border-collapse select-none">
           <thead>
             <tr className={`border-b transition-colors ${
               isDarkMode ? "border-white/[0.04] bg-white/[0.01]" : "border-stone-200/60 bg-stone-50/50"
