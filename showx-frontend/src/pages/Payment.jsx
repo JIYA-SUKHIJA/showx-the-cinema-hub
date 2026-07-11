@@ -6,7 +6,7 @@ import { useRazorpay } from '../hooks/useRazorpay';
 import { useTheme } from '../context/ThemeContext';
 import { 
   ShieldCheck, Loader2, Ticket, MapPin, CalendarClock, 
-  ChevronLeft, CreditCard, Trash2, Clock
+  ChevronLeft, Trash2, Clock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PaymentPageSkeleton } from '../components/atoms/Skeletons';
@@ -113,27 +113,34 @@ export default function Payment() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="max-w-5xl mx-auto space-y-6 font-sans antialiased"
+      className="max-w-5xl mx-auto space-y-5 sm:space-y-6 font-sans antialiased w-full px-1 sm:px-0 overflow-x-hidden"
     >
       
-      <div className={`p-3.5 rounded-2xl flex items-center justify-center gap-2 text-xs font-black tracking-wide border border-dashed ${
+      {/* Top Countdown Session Lock Alert Row */}
+      <div className={`p-3.5 rounded-2xl flex flex-col xs:flex-row items-center justify-center text-center xs:text-left gap-2 text-xs font-black tracking-wide border border-dashed ${
         isDarkMode 
           ? "bg-amber-500/5 border-amber-500/20 text-amber-400" 
           : "bg-amber-50 border-amber-400/40 text-amber-800"
       }`}>
-        <Clock size={14} className="animate-pulse" />
-        <span>Secure Seat Reservation Locked! Completing transaction within:</span>
-        <span className="font-mono text-sm bg-black/10 px-2 py-0.5 rounded border border-current">
-          {formatTimer(timeLeft)}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Clock size={14} className="animate-pulse" />
+          <span>Secure Seat Reservation Locked!</span>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1 xs:mt-0">
+          <span className="hidden xs:inline">Completing transaction within:</span>
+          <span className="font-mono text-xs sm:text-sm bg-black/10 px-2 py-0.5 rounded border border-current font-black">
+            {formatTimer(timeLeft)}
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Control Actions Dispatch Deck */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
         <motion.button 
-          whileHover={{ scale: 1.05, filter: "brightness(1.05)" }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => navigate(-1)}
-          className={`flex items-center gap-1 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer bg-transparent border-none outline-none ${
+          className={`flex items-center gap-1 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer bg-transparent border-none outline-none self-start focus:outline-none min-h-[32px] ${
             isDarkMode ? "text-slate-400 hover:text-amber-500" : "text-stone-500 hover:text-amber-700"
           }`}
         >
@@ -142,10 +149,10 @@ export default function Payment() {
 
         {seatCount > 0 && (
           <motion.button
-            whileHover={{ scale: 1.03, filter: "brightness(1.05)" }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleClearSelection}
-            className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-red-500 hover:text-red-400 transition-colors cursor-pointer bg-red-500/5 px-3 py-1.5 rounded-lg border border-red-500/10 hover:border-red-500/30"
+            className="flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wider text-red-500 hover:text-red-400 transition-colors cursor-pointer bg-red-500/5 px-3 py-2 rounded-lg border border-red-500/10 hover:border-red-500/30 w-full sm:w-auto text-center min-h-[36px] select-none"
           >
             <Trash2 size={13} /> Remove All Selected Seats
           </motion.button>
@@ -153,18 +160,20 @@ export default function Payment() {
       </div>
 
       {errorMsg && (
-        <p className="text-center text-xs font-bold text-rose-500">{errorMsg}</p>
+        <p className="text-center text-xs font-bold text-rose-500 font-mono">{errorMsg}</p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
+      {/* Primary Payment Row Shell Splits */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 sm:gap-8 items-start w-full">
         
-        <div className={`md:col-span-3 border rounded-[32px] p-6 sm:p-8 shadow-xl space-y-6 transition-all duration-300 ${
+        {/* Left Side: Secure payment authorization frame */}
+        <div className={`md:col-span-3 border rounded-2xl sm:rounded-[32px] p-5 sm:p-8 shadow-xl space-y-5 sm:space-y-6 transition-all duration-300 w-full ${
           isDarkMode 
             ? "bg-gradient-to-b from-white/[0.02] to-transparent border-white/[0.04] bg-slate-900/40" 
             : "bg-white border-stone-200"
         }`}>
-          <div className="space-y-1.5">
-            <h2 className={`text-xl font-display font-black tracking-tight ${isDarkMode ? "text-white" : "text-stone-900"}`}>
+          <div className="space-y-1">
+            <h2 className={`text-lg sm:text-xl font-display font-black tracking-tight ${isDarkMode ? "text-white" : "text-stone-900"}`}>
               Secure Payment
             </h2>
             <p className="text-xs text-slate-500 font-medium">Verified multi-channel security layers active via native API endpoints.</p>
@@ -174,7 +183,7 @@ export default function Payment() {
             isDarkMode ? "bg-slate-950/40 border-white/[0.04]" : "bg-stone-50 border-stone-200"
           }`}>
             <ShieldCheck size={18} className="text-amber-600 shrink-0 mt-0.5" />
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <span className={`text-xs font-black uppercase tracking-wide block ${isDarkMode ? "text-slate-300" : "text-stone-800"}`}>
                 Powered by Razorpay
               </span>
@@ -186,11 +195,11 @@ export default function Payment() {
 
           <div className="pt-2">
             <motion.button
-              whileHover={seatCount > 0 && !isPaying ? { scale: 1.02, filter: "brightness(1.05)" } : {}}
-              whileTap={seatCount > 0 && !isPaying ? { scale: 0.98 } : {}}
+              whileHover={seatCount > 0 && !isPaying ? { scale: 1.01, filter: "brightness(1.04)" } : {}}
+              whileTap={seatCount > 0 && !isPaying ? { scale: 0.99 } : {}}
               onClick={handleRazorpayGateway}
               disabled={!isScriptLoaded || isPaying || seatCount === 0}
-              className={`w-full font-black tracking-wider text-xs uppercase py-4 rounded-xl transition-all border flex items-center justify-center gap-2 shadow-lg ${
+              className={`w-full font-black tracking-wider text-xs uppercase py-3.5 rounded-xl transition-all border flex items-center justify-center gap-2 shadow-lg min-h-[46px] ${
                 seatCount > 0
                   ? isDarkMode
                     ? "bg-white text-slate-950 border-transparent shadow-white/5 cursor-pointer"
@@ -202,11 +211,11 @@ export default function Payment() {
             >
               {isPaying ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" /> Verifying Transaction Nodes...
+                  <Loader2 size={14} className="animate-spin shrink-0" /> Verifying Transaction Nodes...
                 </>
               ) : seatCount > 0 ? (
                 <>
-                  <ShieldCheck size={14} /> Pay Securely ₹{finalPayable}.00
+                  <ShieldCheck size={14} className="shrink-0" /> Pay Securely ₹{finalPayable}.00
                 </>
               ) : (
                 "Cart is Empty"
@@ -215,25 +224,27 @@ export default function Payment() {
           </div>
         </div>
 
-        <div className={`md:col-span-2 border rounded-[32px] p-6 shadow-xl relative overflow-hidden space-y-5 transition-all duration-300 ${
+        {/* Right Side: Reservation calculations card stack */}
+        <div className={`md:col-span-2 border rounded-2xl sm:rounded-[32px] p-5 sm:p-6 shadow-xl relative overflow-hidden space-y-5 transition-all duration-300 w-full ${
           isDarkMode ? "bg-slate-950 border-white/[0.04]" : "bg-gradient-to-br from-[#faf9f5] to-[#eae7dc] border-stone-200/80"
         }`}>
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-amber-600 to-yellow-600" />
           
-          <div className="space-y-3">
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">Reservation Order</span>
-            <h3 className={`text-lg font-display font-black tracking-tight leading-snug ${isDarkMode ? "text-white" : "text-stone-900"}`}>
+          <div className="space-y-2.5">
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-500 block">Reservation Order</span>
+            <h3 className={`text-base sm:text-lg font-display font-black tracking-tight leading-snug truncate ${isDarkMode ? "text-white" : "text-stone-900"}`}>
               {movieTitle}
             </h3>
             
-            <div className={`space-y-2 pt-2 text-[11px] font-medium border-t ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`}>
-              <p className="text-slate-500 flex items-center gap-1.5"><MapPin size={13} className="text-amber-600 shrink-0" /> {cinemaName}</p>
-              <p className="text-slate-500 flex items-center gap-1.5"><CalendarClock size={13} className="text-amber-600 shrink-0" /> {showtimeSlot}</p>
-              <div className="text-slate-500 flex items-start gap-1.5">
-                <Ticket size={13} className="text-amber-600 shrink-0 mt-0.5" /> 
-                <div className="flex flex-wrap gap-1">
+            <div className={`space-y-2 pt-2.5 text-[11px] font-medium border-t w-full overflow-hidden ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`}>
+              <p className="text-slate-500 flex items-center gap-1.5 truncate"><MapPin size={12} className="text-amber-600 shrink-0" /> {cinemaName}</p>
+              <p className="text-slate-500 flex items-center gap-1.5 truncate"><CalendarClock size={12} className="text-amber-600 shrink-0" /> {showtimeSlot}</p>
+              
+              <div className="text-slate-500 flex items-start gap-1.5 w-full pt-0.5">
+                <Ticket size={12} className="text-amber-600 shrink-0 mt-0.5" /> 
+                <div className="flex flex-wrap gap-1 w-full">
                   {seatCount > 0 ? selectedSeats.sort().map((seat) => (
-                    <span key={seat} className="font-mono font-bold text-xs bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded border border-amber-500/10">
+                    <span key={seat} className="font-mono font-bold text-[11px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded border border-amber-500/10 shrink-0">
                       {seat}
                     </span>
                   )) : <span className="font-medium text-slate-400">None Allocation</span>}
@@ -242,15 +253,15 @@ export default function Payment() {
             </div>
           </div>
 
-          <div className={`border-t pt-4 space-y-2.5 text-xs ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`}>
-            <div className="flex justify-between font-medium">
+          <div className={`border-t pt-3.5 space-y-2 text-xs w-full ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`}>
+            <div className="flex justify-between font-medium items-center">
               <span className="text-slate-500">Ticket Amount ({seatCount} seats)</span>
-              <span className={isDarkMode ? "text-slate-300 font-mono" : "text-stone-700 font-mono"}>₹{basePrice}.00</span>
+              <span className={`font-mono text-right ${isDarkMode ? "text-slate-300" : "text-stone-700"}`}>₹{basePrice}.00</span>
             </div>
-            <hr className={isDarkMode ? "border-white/[0.04] my-1" : "border-stone-200/60 my-1"} />
+            <hr className={`my-1 border-solid ${isDarkMode ? "border-white/[0.04]" : "border-stone-200/60"}`} />
             <div className="flex justify-between items-baseline pt-1">
-              <span className={`font-black uppercase tracking-wider text-[10px] ${isDarkMode ? "text-white" : "text-stone-900"}`}>Total Grand Payable</span>
-              <span className="text-lg font-black text-amber-600 font-mono">₹{finalPayable}.00</span>
+              <span className={`font-black uppercase tracking-wider text-[9px] sm:text-[10px] ${isDarkMode ? "text-white" : "text-stone-900"}`}>Total Grand Payable</span>
+              <span className="text-base sm:text-lg font-black text-amber-600 font-mono text-right">₹{finalPayable}.00</span>
             </div>
           </div>
         </div>
