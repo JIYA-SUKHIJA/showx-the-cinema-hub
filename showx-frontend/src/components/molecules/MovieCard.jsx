@@ -35,7 +35,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
     navigate(`/${routePrefix}/${item.id}`);
   };
 
-  const formatsList = item.format ? item.format.split('/').map(f => f.trim()) : ['2D'];
+  const formatsList = item.format ? item.format.split('/').map(f => f.trim()) : ['2D Standard'];
   const genreList = Array.isArray(item.genre) 
   ? item.genre 
   : (item.genre ? item.genre.split('•').map(g => g.trim()) : ['Entertainment']);
@@ -124,8 +124,8 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
       </div>
 
       {/* Card Body Info Matrix */}
-      <div className="p-4 flex-grow flex flex-col justify-between">
-        <div onClick={handleNavigateToBriefing} className="cursor-pointer group/title space-y-2.5">
+      <div className="p-3 sm:p-4 flex-grow flex flex-col justify-between">
+        <div onClick={handleNavigateToBriefing} className="cursor-pointer group/title space-y-2">
           <h3 className={`text-sm md:text-base font-black tracking-tight group-hover/title:text-amber-500 transition-colors line-clamp-1 relative pb-0.5 ${isDarkMode ? "text-white" : "text-slate-800"}`}>
             {itemTitle}
             <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500/30 transition-all duration-300 group-hover/title:w-full" />
@@ -133,7 +133,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
           
           {/* Genre Chips Cluster */}
           <div className="flex flex-wrap gap-1">
-            {genreList.map((genre, i) => (
+            {genreList.slice(0, 2).map((genre, i) => (
               <span 
                 key={i} 
                 className={`text-[9px] font-bold px-2 py-0.5 rounded tracking-wide select-none ${
@@ -164,10 +164,10 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
           )}
         </div>
 
-        {/* Action Controls Footer */}
-        <div className={`mt-4 pt-3 border-t flex items-center justify-between gap-2 ${isDarkMode ? "border-white/[0.04]" : "border-slate-100"}`}>
+        {/* Action Controls Footer — Maintained exact horizontal architecture layout with micro-fluid padding steps for absolute non-destructive mobile scaling */}
+        <div className={`mt-4 pt-3 border-t flex items-center justify-between gap-1 xs:gap-2 ${isDarkMode ? "border-white/[0.04]" : "border-slate-100"}`}>
           
-          <div className="flex flex-wrap gap-1 max-w-[45%] items-center select-none">
+          <div className="flex flex-wrap gap-1 max-w-[45%] items-center select-none overflow-hidden">
             {isEventOrPlay ? (
               <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border truncate ${isDarkMode ? "bg-white/[0.02] text-slate-400 border-white/[0.05]" : "bg-slate-50 text-slate-600 border-slate-100"}`}>
                 {item.date || 'Live'}
@@ -180,7 +180,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
               formatsList.map((f, idx) => (
                 <span 
                   key={idx} 
-                  className={`px-1 py-0.5 text-[8px] font-bold font-mono tracking-wider rounded border uppercase whitespace-nowrap ${
+                  className={`px-1.5 py-0.5 text-[8px] font-bold font-mono tracking-wider rounded border uppercase whitespace-nowrap ${
                     isDarkMode 
                       ? "bg-slate-800/40 text-slate-400 border-slate-700/60" 
                       : "bg-slate-50 text-slate-500 border-slate-200"
@@ -192,8 +192,8 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
             )}
           </div>
 
-          {/* Step 5 Interactive Button Clusters Enforced */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Buttons layer: Used compact custom dynamic horizontal padding structures down to 320px screens to maintain full pixel-perfect text visibility */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <motion.button
               whileHover={{ scale: 1.05, bg: "rgba(255,255,255,0.05)" }}
               whileTap={{ scale: 0.95 }}
@@ -201,7 +201,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
                 e.stopPropagation();
                 handleNavigateToBriefing();
               }}
-              className={`p-2 rounded-xl border transition-all cursor-pointer focus:outline-none ${
+              className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer focus:outline-none ${
                 isDarkMode 
                   ? "border-white/10 bg-white/[0.02] text-slate-400 hover:text-amber-500" 
                   : "border-slate-200 bg-slate-50 text-slate-600 hover:text-amber-500"
@@ -217,7 +217,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
                 e.stopPropagation();
                 onActionClick();
               }}
-              className={`px-3.5 py-1.5 text-[11px] font-black rounded-xl transition-all shadow-md cursor-pointer focus:outline-none ${
+              className={`px-2 py-1.5 max-[340px]:px-1.5 min-[375px]:px-3.5 text-[10px] min-[360px]:text-[11px] font-black rounded-xl transition-all shadow-md cursor-pointer focus:outline-none whitespace-nowrap ${
                 isDarkMode 
                   ? "bg-white text-slate-950 hover:bg-amber-500 border-transparent" 
                   : "bg-slate-900 text-white hover:bg-amber-500 hover:text-stone-950 border-transparent"

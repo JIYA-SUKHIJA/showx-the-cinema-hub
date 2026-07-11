@@ -96,7 +96,7 @@ export default function SelectSeats() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`max-w-5xl mx-auto border rounded-[32px] p-4 sm:p-8 md:p-10 shadow-2xl transition-all duration-500 relative ${
+      className={`max-w-5xl mx-auto border rounded-[24px] sm:rounded-[32px] p-3.5 sm:p-8 md:p-10 shadow-2xl transition-all duration-500 relative w-full overflow-hidden ${
         isDarkMode 
           ? "bg-slate-950 border-white/[0.04] text-slate-100 shadow-black/80" 
           : "bg-gradient-to-br from-[#FAFAF8] via-[#F4F2E9] to-[#EAE6D8] border-stone-200/80 shadow-[0_30px_60px_rgba(218,165,32,0.03)] text-stone-900" 
@@ -105,60 +105,62 @@ export default function SelectSeats() {
       <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500" />
       
       {/* --- HEADER DESK PANEL --- */}
-      <div className={`flex items-center justify-between border-b pb-5 mb-8 text-xs font-black uppercase tracking-widest ${isDarkMode ? "border-white/[0.04] text-slate-400" : "border-stone-200 text-stone-500"}`}>
+      <div className={`flex items-center justify-between border-b pb-4 sm:pb-5 mb-6 sm:mb-8 text-[10px] sm:text-xs font-black uppercase tracking-widest ${isDarkMode ? "border-white/[0.04] text-slate-400" : "border-stone-200 text-stone-500"}`}>
         <motion.button 
           whileHover={{ scale: 1.03, x: -2 }} 
           whileTap={{ scale: 0.97 }} 
           onClick={() => navigate(-1)} 
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer bg-transparent font-black focus:outline-none focus:ring-2 focus:ring-amber-500/40 ${isDarkMode ? "border-white/10 text-slate-300 hover:text-white" : "border-stone-300 text-stone-700 hover:text-stone-950"}`}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer bg-transparent font-black focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[36px] ${isDarkMode ? "border-white/10 text-slate-300 hover:text-white" : "border-stone-300 text-stone-700 hover:text-stone-950"}`}
         >
-          <ChevronLeft size={14} /> Back
+          <ChevronLeft size={13} /> Back
         </motion.button>
-        <span className="flex items-center gap-1.5 font-display tracking-widest">
-          <Armchair size={14} className={isDarkMode ? "text-amber-500 animate-pulse" : "text-amber-600 animate-pulse"} /> 
-          Theater Configuration Matrix
+        <span className="flex items-center gap-1.5 font-display tracking-widest text-right">
+          <Armchair size={13} className={isDarkMode ? "text-amber-500 animate-pulse" : "text-amber-600 animate-pulse"} /> 
+          <span className="hidden xs:inline">Theater Configuration Matrix</span>
+          <span className="xs:hidden">Layout Grid</span>
         </span>
       </div>
 
       {/* --- SHOW IDENTIFICATION CARD --- */}
-      <div className={`mb-6 p-4 rounded-2xl border transition-all ${isDarkMode ? "bg-white/[0.01] border-white/[0.05]" : "bg-white/60 border-stone-200/60 backdrop-blur-sm shadow-sm"}`}>
-        <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase mb-2 font-mono flex items-center gap-1">
+      <div className={`mb-6 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all ${isDarkMode ? "bg-white/[0.01] border-white/[0.05]" : "bg-white/60 border-stone-200/60 backdrop-blur-sm shadow-sm"}`}>
+        <p className="text-[9px] sm:text-[10px] font-black tracking-wider text-slate-400 uppercase mb-2 font-mono flex items-center gap-1">
           <Sparkles size={11} className="text-amber-500" /> Selected Show Node:
         </p>
-        <span className={`text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 border w-fit transition-transform hover:scale-[1.01] ${isDarkMode ? "bg-slate-900 border-white/5 text-white" : "bg-[#FAFAF8] border-stone-200 text-stone-800 shadow-sm"}`}>
-          <MapPin size={12} className="text-amber-500" /> {selectedShow.theatre.name} &bull; {selectedShow.showTime} &bull; ₹{pricePerSeat}/seat
-        </span>
+        <div className={`text-[11px] sm:text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border w-fit transition-transform hover:scale-[1.01] max-w-full ${isDarkMode ? "bg-slate-900 border-white/5 text-white" : "bg-[#FAFAF8] border-stone-200 text-stone-800 shadow-sm"}`}>
+          <MapPin size={12} className="text-amber-500 shrink-0" /> 
+          <span className="truncate">{selectedShow.theatre.name} &bull; {selectedShow.showTime} &bull; ₹{pricePerSeat}/seat</span>
+        </div>
       </div>
 
       {/* --- SEAT STATUS MATRIX LEGEND --- */}
-      <div className="flex flex-wrap justify-center gap-6 mb-8 text-[10px] font-black uppercase tracking-wider font-mono">
+      <div className="flex flex-wrap justify-center gap-x-5 gap-y-2.5 mb-6 sm:mb-8 text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono">
         <div className="flex items-center gap-2">
-          <span className={`w-3.5 h-3.5 rounded border ${isDarkMode ? "bg-white/[0.02] border-white/10" : "bg-stone-50 border-slate-200"}`} />
+          <span className={`w-3 h-3 rounded border ${isDarkMode ? "bg-white/[0.02] border-white/10" : "bg-stone-50 border-slate-200"}`} />
           <span className="opacity-70">Available</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3.5 h-3.5 rounded border bg-amber-500 border-amber-500" />
+          <span className="w-3 h-3 rounded border bg-amber-500 border-amber-500" />
           <span className="text-amber-500">Selected</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`w-3.5 h-3.5 rounded border opacity-40 ${isDarkMode ? "bg-slate-900 border-slate-950" : "bg-slate-200 border-slate-300"}`} />
+          <span className={`w-3 h-3 rounded border opacity-40 ${isDarkMode ? "bg-slate-900 border-slate-950" : "bg-slate-200 border-slate-300"}`} />
           <span className="opacity-40">Booked</span>
         </div>
       </div>
 
       {/* --- CINEMA CURVED SCREEN GRAPHIC --- */}
-      <div className="relative flex flex-col items-center mb-14 px-4">
-        <div className={`w-4/5 h-2 rounded-full transition-all duration-700 ${
+      <div className="relative flex flex-col items-center mb-10 sm:mb-14 px-2">
+        <div className={`w-11/12 sm:w-4/5 h-2 rounded-full transition-all duration-700 ${
           isDarkMode 
             ? "bg-gradient-to-b from-amber-500 via-amber-500/20 to-transparent blur-[1px] shadow-[0_4px_20px_rgba(245,158,11,0.15)]" 
             : "bg-gradient-to-b from-amber-600 via-amber-500/10 to-transparent blur-[0.5px] shadow-[0_4px_15px_rgba(217,119,6,0.08)]"
         }`} />
-        <span className={`text-[9px] font-black uppercase tracking-[0.6em] mt-4 select-none ${isDarkMode ? "text-amber-400/60" : "text-amber-800/80"}`}>SCREEN THIS WAY</span>
+        <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-[0.4em] sm:tracking-[0.6em] mt-3.5 select-none ${isDarkMode ? "text-amber-400/60" : "text-amber-800/80"}`}>SCREEN THIS WAY</span>
       </div>
 
-      {/* --- INTERACTIVE SEAT GRID --- */}
-      <div className="overflow-x-auto pb-6 mb-4 no-scrollbar"> 
-        <div className="min-w-[760px] flex flex-col gap-3.5 px-4 select-none relative">
+      {/* --- INTERACTIVE SEAT GRID — Active Horizontal Pan Control on Mobile Bounds --- */}
+      <div className="overflow-x-auto pb-4 mb-4 no-scrollbar cursor-grab active:cursor-grabbing w-full"> 
+        <div className="min-w-[760px] flex flex-col gap-3 px-4 select-none relative mx-auto">
           
           {/* Real-time Dynamic Tooltip Popover Overlay */}
           <AnimatePresence>
@@ -216,7 +218,7 @@ export default function SelectSeats() {
                               isBooked 
                                 ? (isDarkMode ? "bg-slate-900 border-slate-950 text-slate-700 opacity-25 cursor-not-allowed" : "bg-slate-200 border-slate-300 text-slate-400 opacity-40 cursor-not-allowed") 
                                 : isSelected 
-                                  ? "bg-amber-500 border-amber-500 text-stone-950 scale-105 shadow-md shadow-amber-500/20" 
+                                  ? "bg-amber-50 border-amber-500 text-stone-950 scale-105 shadow-md shadow-amber-500/20" 
                                   : isVIP 
                                     ? (isDarkMode ? "bg-amber-500/5 border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500" : "bg-amber-50 border-amber-300/60 text-amber-700 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500") 
                                     : (isDarkMode ? "bg-white/[0.02] border-white/10 text-slate-300 hover:border-amber-500/50 hover:text-amber-500" : "bg-stone-50 border-slate-200 text-slate-600 hover:border-amber-500/50 hover:text-amber-600")
@@ -269,13 +271,13 @@ export default function SelectSeats() {
         <p className="text-center text-xs font-bold text-rose-500 mb-4 font-mono">{errorMsg}</p>
       )}
 
-      {/* --- STICKY STAGE PAYMENT FOOTER PLATFORM --- */}
-      <div className={`max-w-3xl mx-auto border p-5 sm:p-6 rounded-2xl flex flex-col sm:flex-row gap-5 items-center justify-between shadow-xl backdrop-blur-md transition-all ${
+      {/* --- STICKY STAGE PAYMENT FOOTER PLATFORM — Adaptive Flex Direction --- */}
+      <div className={`max-w-3xl mx-auto border p-4 sm:p-6 rounded-2xl flex flex-col sm:flex-row gap-4 sm:gap-5 items-center justify-between shadow-xl backdrop-blur-md transition-all ${
         isDarkMode 
           ? "bg-slate-900/60 border-white/[0.05]" 
           : "bg-white/70 border-stone-200/80 shadow-md shadow-stone-900/5"
       }`}>
-        <div className="flex gap-12 text-xs font-medium self-start sm:self-auto">
+        <div className="flex gap-8 sm:gap-12 text-xs font-medium w-full sm:w-auto justify-between sm:justify-start">
           <div>
             <span className={`block text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? "text-slate-500" : "text-stone-400"}`}>Tickets</span>
             <span className={`font-mono font-black tracking-wide block min-h-[18px] text-sm transition-colors ${selectedSeats.length > 0 ? "text-amber-500" : "text-slate-400"}`}>
@@ -295,7 +297,7 @@ export default function SelectSeats() {
           whileTap={selectedSeats.length > 0 ? { scale: 0.98 } : {}}
           onClick={handleCheckout}
           disabled={selectedSeats.length === 0 || submitting}
-          className={`w-full sm:w-auto px-8 py-3.5 font-black text-xs uppercase tracking-widest rounded-xl transition-all border outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 ${
+          className={`w-full sm:w-auto px-6 py-3.5 font-black text-xs uppercase tracking-widest rounded-xl transition-all border outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 min-h-[44px] flex items-center justify-center ${
             selectedSeats.length > 0 
               ? (isDarkMode ? "bg-white text-slate-950 border-transparent cursor-pointer" : "bg-stone-950 text-white border-transparent cursor-pointer") 
               : (isDarkMode ? "bg-white/[0.01] border-white/[0.03] text-slate-700 cursor-not-allowed" : "bg-stone-100 border-stone-200/60 text-stone-400 cursor-not-allowed")
@@ -305,7 +307,7 @@ export default function SelectSeats() {
         </motion.button>
       </div>
       
-      <div className={`text-center text-[10px] font-mono font-medium mt-10 tracking-wider select-none ${isDarkMode ? "text-slate-600" : "text-stone-500/60"}`}>
+      <div className={`text-center text-[10px] font-mono font-medium mt-8 sm:mt-10 tracking-wider select-none ${isDarkMode ? "text-slate-600" : "text-stone-500/60"}`}>
         &copy; {new Date().getFullYear()} SHOWX HUB // INCUBATED NODE DATA CHANNELS 
       </div>
     </motion.div>
