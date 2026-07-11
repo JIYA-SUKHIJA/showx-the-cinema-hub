@@ -5,6 +5,9 @@ import {
   logoutUser,
   getProfile,
   updateProfile,
+  forgotPassword,
+  resetPassword,
+  googleAuth,
 } from "../controllers/authController.js";
 import protect from "../middleware/authMiddleware.js";
 import {
@@ -20,6 +23,9 @@ const router = express.Router();
 // Public routes — anyone can call these
 router.post("/register", registerValidationRules, validate, registerUser);
 router.post("/login", loginValidationRules, validate, loginUser);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+router.post("/google", googleAuth);
 
 // Private routes — 'protect' middleware runs FIRST.
 // If the JWT is missing/invalid, the request is rejected before

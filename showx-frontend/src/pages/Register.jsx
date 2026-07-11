@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/atoms/Toast';
 import axiosInstance from '../services/axiosInstance';
@@ -67,6 +68,25 @@ const Register = () => {
       setTimeout(() => navigate("/login"), 1200);
     } catch (err) {
       const message = err.response?.data?.message || "Account creation failed. Please retry.";
+      setToast({ message, type: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Same Google flow as Login — verified on the backend, and since our
+  // backend's googleAuth logic both creates AND logs in a user, this single
+  // button handles "sign up with Google" and "log in with Google" as one.
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    try {
+      await axiosInstance.post('/auth/google', {
+        credential: credentialResponse.credential,
+      });
+      setToast({ message: "Account created with Google! Welcome to ShowX.", type: 'success' });
+      setTimeout(() => navigate('/'), 1000);
+    } catch (err) {
+      const message = err.response?.data?.message || "Google sign up failed. Please try again.";
       setToast({ message, type: 'error' });
     } finally {
       setIsLoading(false);
@@ -216,6 +236,26 @@ const Register = () => {
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign Up"}
         </button>
       </form>
+
+      {/* Separator */}
+      <div className="relative my-6 flex items-center justify-center">
+        <div className={`w-full border-t ${isDarkMode ? "border-white/5" : "border-stone-200"}`}></div>
+        <span className={`absolute px-4 text-[10px] font-black tracking-widest uppercase ${isDarkMode ? "bg-[#0B0D13] text-slate-600" : "bg-white text-slate-400"}`}>
+          or
+        </span>
+      </div>
+
+      {/* Google Sign Up Button */}
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => setToast({ message: "Google sign up failed. Please try again.", type: 'error' })}
+          theme={isDarkMode ? "filled_black" : "outline"}
+          shape="pill"
+          width="320"
+          text="signup_with"
+        />
+      </div>
 
       <p className="text-center text-xs text-slate-500 font-semibold tracking-wide mt-8">
         Already have an account?{' '}

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Mail, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/atoms/Toast';
+import axiosInstance from '../services/axiosInstance';
 
 const ForgotPassword = () => {
   const { isDarkMode } = useTheme();
@@ -26,7 +27,7 @@ const ForgotPassword = () => {
 
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await axiosInstance.post('/auth/forgot-password', { email });
       setToast({ message: "Recovery credentials dispatched successfully.", type: 'success' });
       setIsSubmitted(true);
     } catch (err) {

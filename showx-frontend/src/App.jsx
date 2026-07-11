@@ -2,6 +2,7 @@
 import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BookingProvider } from './context/BookingContext';
 import { ThemeProvider } from './context/ThemeContext';
 import './components/styles/DashboardLayout.css';
@@ -28,6 +29,7 @@ const Support = lazy(() => import('./pages/Support'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Profile = lazy(() => import('./pages/Profile'));
 
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -92,6 +94,7 @@ const router = createBrowserRouter([
       { path: 'login', element: <Suspense fallback={<PageLoader />}><Login /></Suspense> },
       { path: 'register', element: <Suspense fallback={<PageLoader />}><Register /></Suspense> },
       { path: 'forgot-password', element: <Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense> },
+      { path: 'reset-password/:token', element: <Suspense fallback={<PageLoader />}><ResetPassword /></Suspense> },
     ]
   },
   {
@@ -108,11 +111,13 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BookingProvider>
-        <Toaster position="top-right" reverseOrder={false} />
-        <RouterProvider router={router} />
-      </BookingProvider>
-    </ThemeProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <ThemeProvider>
+        <BookingProvider>
+          <Toaster position="top-right" reverseOrder={false} />
+          <RouterProvider router={router} />
+        </BookingProvider>
+      </ThemeProvider>
+    </GoogleOAuthProvider>
   );
 }

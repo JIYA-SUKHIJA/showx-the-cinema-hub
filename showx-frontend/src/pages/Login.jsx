@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/atoms/Toast';
 import axiosInstance from '../services/axiosInstance';
@@ -37,11 +38,30 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      await axiosInstance.post('/auth/login', { email, password });
+      await axiosInstance.post('/auth/login', { email, password, rememberMe });
       setToast({ message: "Welcome back! Login successful.", type: 'success' });
       setTimeout(() => navigate('/'), 1000);
     } catch (err) {
       const message = err.response?.data?.message || "Invalid credentials. Please verify your details.";
+      setToast({ message, type: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // This runs when Google successfully signs the user in. credentialResponse
+  // contains a signed token — we send it to our backend, which verifies it
+  // with Google and logs the user in (or creates their account).
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    try {
+      await axiosInstance.post('/auth/google', {
+        credential: credentialResponse.credential,
+      });
+      setToast({ message: "Welcome! Google login successful.", type: 'success' });
+      setTimeout(() => navigate('/'), 1000);
+    } catch (err) {
+      const message = err.response?.data?.message || "Google login failed. Please try again.";
       setToast({ message, type: 'error' });
     } finally {
       setIsLoading(false);
@@ -163,7 +183,26 @@ const Login = () => {
         </button>
       </form>
 
-      <div className="grid grid-cols-1 gap-3 mt-6">
+      {/* Separator */}
+      <div className="relative my-6 flex items-center justify-center">
+        <div className={`w-full border-t ${isDarkMode ? "border-white/5" : "border-stone-200"}`}></div>
+        <span className={`absolute px-4 text-[10px] font-black tracking-widest uppercase ${isDarkMode ? "bg-[#0B0D13] text-slate-600" : "bg-white text-slate-400"}`}>
+          or
+        </span>
+      </div>
+
+      {/* Google Login Button */}
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => setToast({ message: "Google login failed. Please try again.", type: 'error' })}
+          theme={isDarkMode ? "filled_black" : "outline"}
+          shape="pill"
+          width="320"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 mt-4">
         <button
           type="button"
           onClick={() => {
