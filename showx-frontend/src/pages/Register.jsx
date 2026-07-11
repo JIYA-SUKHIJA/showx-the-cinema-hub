@@ -74,9 +74,6 @@ const Register = () => {
     }
   };
 
-  // Same Google flow as Login — verified on the backend, and since our
-  // backend's googleAuth logic both creates AND logs in a user, this single
-  // button handles "sign up with Google" and "log in with Google" as one.
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
     try {
@@ -93,7 +90,7 @@ const Register = () => {
     }
   };
 
-  const inputStyleClass = (fieldName) => `peer w-full rounded-xl py-3.5 pl-11 pr-4 text-xs outline-none border transition-all duration-200 pt-5 pb-2 ${
+  const inputStyleClass = (fieldName) => `peer w-full rounded-xl py-3.5 pl-11 pr-4 text-xs outline-none border transition-all duration-200 pt-5 pb-2 min-h-[46px] ${
     isDarkMode 
       ? "bg-[#11141D] text-white border-gray-800/40 focus:border-amber-500/60" 
       : "bg-stone-50 text-slate-800 border-stone-200 focus:border-amber-500/60"
@@ -102,26 +99,26 @@ const Register = () => {
   const labelStyleClass = "absolute left-11 top-3.5 origin-[0] -translate-y-2.5 scale-75 transform text-[11px] text-slate-500 font-semibold tracking-wide duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-focus:text-amber-500 cursor-text select-none";
 
   return (
-    <>
+    <div className="w-full px-1 sm:px-2">
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
 
-      {/* Profile Header Icon Shell[cite: 6] */}
+      {/* Profile Header Icon Shell */}
       <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border shadow-inner transition-colors duration-300 ${
         isDarkMode ? "bg-[#11141D] border-gray-800/60 text-[#FF9F00]" : "bg-stone-100 border-stone-200 text-amber-600"
       }`}>
         <User size={20} strokeWidth={1.8} />
       </div>
 
-      <h2 className={`text-2xl font-bold text-center tracking-wide transition-colors ${isDarkMode ? "text-white" : "text-slate-800"}`}>
+      <h2 className={`text-xl sm:text-2xl font-bold text-center tracking-wide transition-colors ${isDarkMode ? "text-white" : "text-slate-800"}`}>
         Create Your Account
       </h2>
-      <p className="text-xs text-slate-500 text-center mt-1.5 mb-8">Join Showx and start your cinematic journey.</p>
+      <p className="text-xs text-slate-500 text-center mt-1.5 mb-6 sm:mb-8">Join Showx and start your cinematic journey.</p>
 
       <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
         
-        {/* Full Name Floating Field[cite: 6] */}
+        {/* Full Name Floating Field */}
         <div className="space-y-1">
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full">
             <span className="absolute left-4 text-slate-500 z-10"><User size={16} /></span>
             <input
               id="fullName"
@@ -138,9 +135,9 @@ const Register = () => {
           {errors.fullName && <motion.p initial={{opacity:0}} animate={{opacity:1}} className="text-[10px] text-rose-500 font-semibold pl-1">{errors.fullName}</motion.p>}
         </div>
 
-        {/* Email Address Floating Field[cite: 6] */}
+        {/* Email Address Floating Field */}
         <div className="space-y-1">
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full">
             <span className="absolute left-4 text-slate-500 z-10"><Mail size={16} /></span>
             <input
               id="email"
@@ -157,9 +154,9 @@ const Register = () => {
           {errors.email && <motion.p initial={{opacity:0}} animate={{opacity:1}} className="text-[10px] text-rose-500 font-semibold pl-1">{errors.email}</motion.p>}
         </div>
 
-        {/* Password Floating Field[cite: 6] */}
+        {/* Password Floating Field */}
         <div className="space-y-1">
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full">
             <span className="absolute left-4 text-slate-500 z-10"><Lock size={16} /></span>
             <input
               id="password"
@@ -183,9 +180,9 @@ const Register = () => {
           {errors.password && <motion.p initial={{opacity:0}} animate={{opacity:1}} className="text-[10px] text-rose-500 font-semibold pl-1">{errors.password}</motion.p>}
         </div>
 
-        {/* Confirm Password Floating Field[cite: 6] */}
+        {/* Confirm Password Floating Field */}
         <div className="space-y-1">
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full">
             <span className="absolute left-4 text-slate-500 z-10"><Lock size={16} /></span>
             <input
               id="confirmPassword"
@@ -209,7 +206,7 @@ const Register = () => {
           {errors.confirmPassword && <motion.p initial={{opacity:0}} animate={{opacity:1}} className="text-[10px] text-rose-500 font-semibold pl-1">{errors.confirmPassword}</motion.p>}
         </div>
 
-        {/* Terms and Conditions Acceptance Box Block[cite: 6] */}
+        {/* Terms and Conditions Acceptance Box Block */}
         <div className="space-y-1 pt-1">
           <div className="flex items-start space-x-2.5 select-none">
             <input
@@ -227,11 +224,11 @@ const Register = () => {
           {errors.agreeTerms && <p className="text-[10px] text-rose-500 font-semibold pl-1">{errors.agreeTerms}</p>}
         </div>
 
-        {/* Gradient Sign Up Submit Trigger[cite: 6] */}
+        {/* Gradient Sign Up Submit Trigger */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-xl bg-gradient-to-r from-[#FF9F00] to-[#FF6A00] py-3.5 text-xs font-black text-[#0B0D13] shadow-lg shadow-orange-500/10 hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-none mt-2"
+          className="w-full rounded-xl bg-gradient-to-r from-[#FF9F00] to-[#FF6A00] py-3.5 text-xs font-black text-[#0B0D13] shadow-lg hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-none mt-2 min-h-[44px]"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign Up"}
         </button>
@@ -246,24 +243,24 @@ const Register = () => {
       </div>
 
       {/* Google Sign Up Button */}
-      <div className="flex justify-center">
+      <div className="flex justify-center max-w-full overflow-hidden px-1">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={() => setToast({ message: "Google sign up failed. Please try again.", type: 'error' })}
           theme={isDarkMode ? "filled_black" : "outline"}
           shape="pill"
-          width="320"
+          width="100%"
           text="signup_with"
         />
       </div>
 
-      <p className="text-center text-xs text-slate-500 font-semibold tracking-wide mt-8">
+      <p className="text-center text-xs text-slate-500 font-semibold tracking-wide mt-6">
         Already have an account?{' '}
         <Link to="/login" className="text-[#FF9F00] font-bold hover:underline ml-1">
           Login
         </Link>
       </p>
-    </>
+    </div>
   );
 };
 

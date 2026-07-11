@@ -38,13 +38,13 @@ const ForgotPassword = () => {
   };
 
   return (
-    <>
+    <div className="w-full px-1 sm:px-2">
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
 
       {/* Primary Modal View Panel Grid Layer */}
       {!isSubmitted ? (
         <>
-          {/* Padlock Icon Box[cite: 5] */}
+          {/* Padlock Icon Box */}
           <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border shadow-inner transition-colors duration-300 ${
             isDarkMode ? "bg-[#11141D] border-gray-800/60 text-[#FF9F00]" : "bg-stone-100 border-stone-200 text-amber-600"
           }`}>
@@ -53,18 +53,18 @@ const ForgotPassword = () => {
             </svg>
           </div>
 
-          <h2 className={`text-2xl font-bold text-center tracking-wide transition-colors ${isDarkMode ? "text-white" : "text-slate-800"}`}>
+          <h2 className={`text-xl sm:text-2xl font-bold text-center tracking-wide transition-colors ${isDarkMode ? "text-white" : "text-slate-800"}`}>
             Forgot Password?
           </h2>
-          <p className="text-xs text-slate-500 text-center mt-1.5 mb-8 max-w-[280px] mx-auto leading-relaxed font-semibold">
+          <p className="text-xs text-slate-500 text-center mt-1.5 mb-6 sm:mb-8 max-w-[280px] mx-auto leading-relaxed font-semibold">
             No worries! Enter your email and we'll send you a link to reset your password.
           </p>
 
-          <form onSubmit={handleResetSubmit} className="space-y-5" noValidate>
+          <form onSubmit={handleResetSubmit} className="space-y-4 sm:space-y-5" noValidate>
             
-            {/* Email Address Input Block Container[cite: 5] */}
+            {/* Email Address Input Block Container */}
             <div className="space-y-1">
-              <div className="relative flex items-center">
+              <div className="relative flex items-center w-full">
                 <span className="absolute left-4 text-slate-500 z-10"><Mail className="w-4 h-4" /></span>
                 <input
                   id="email"
@@ -72,7 +72,7 @@ const ForgotPassword = () => {
                   placeholder=" "
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); if(error) setError(''); }}
-                  className={`peer w-full rounded-xl py-3.5 pl-11 pr-4 text-xs outline-none border transition-all duration-200 pt-5 pb-2 ${
+                  className={`peer w-full rounded-xl py-3.5 pl-11 pr-4 text-xs outline-none border transition-all duration-200 pt-5 pb-2 min-h-[46px] ${
                     isDarkMode 
                       ? "bg-[#11141D] text-white border-gray-800/40 focus:border-amber-500/60" 
                       : "bg-stone-50 text-slate-800 border-stone-200 focus:border-amber-500/60"
@@ -88,17 +88,17 @@ const ForgotPassword = () => {
               )}
             </div>
 
-            {/* Radiant Send Reset Link Trigger Button Option[cite: 5] */}
+            {/* Radiant Send Reset Link Trigger Button Option */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-xl bg-gradient-to-r from-[#FF9F00] to-[#FF6A00] py-3.5 text-xs font-black text-[#0B0D13] shadow-lg shadow-orange-500/10 hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-none"
+              className="w-full rounded-xl bg-gradient-to-r from-[#FF9F00] to-[#FF6A00] py-3.5 text-xs font-black text-[#0B0D13] shadow-lg hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-none min-h-[44px]"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Reset Link"}
             </button>
           </form>
 
-          {/* Separation Divider layout frame[cite: 5] */}
+          {/* Separation Divider layout frame */}
           <div className="relative my-6 flex items-center justify-center">
             <div className={`w-full border-t ${isDarkMode ? "border-white/5" : "border-stone-200"}`}></div>
             <span className={`absolute px-4 text-[10px] font-black tracking-widest uppercase ${isDarkMode ? "bg-[#0B0D13] text-slate-600" : "bg-white text-slate-400"}`}>
@@ -106,10 +106,10 @@ const ForgotPassword = () => {
             </span>
           </div>
 
-          {/* Action Navigation: Back to Login button block[cite: 5] */}
+          {/* Action Navigation: Back to Login button block */}
           <Link 
             to="/login" 
-            className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3.5 text-xs font-bold transition active:scale-[0.99] ${
+            className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3.5 text-xs font-bold transition active:scale-[0.99] min-h-[44px] ${
               isDarkMode 
                 ? "bg-[#11141D] border-gray-800/40 text-slate-300 hover:bg-[#151924]" 
                 : "bg-stone-50 border-stone-200 text-slate-700 hover:bg-stone-100"
@@ -120,7 +120,7 @@ const ForgotPassword = () => {
           </Link>
         </>
       ) : (
-        /* Dispatched success feedback screen alternative layer view[cite: 5] */
+        /* Dispatched success feedback screen alternative layer view */
         <motion.div initial={{opacity:0, scale:0.98}} animate={{opacity:1, scale:1}} className="text-center py-4 space-y-5">
           <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-inner">
             <CheckCircle2 className="w-6 h-6" />
@@ -128,15 +128,15 @@ const ForgotPassword = () => {
           
           <div className="space-y-2">
             <h4 className={`text-xl font-bold tracking-wide ${isDarkMode ? "text-white" : "text-slate-800"}`}>Link Dispatched</h4>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed font-semibold">
-              We have sent a secure password recovery link to <span className="text-[#FF9F00] font-bold break-all">{email}</span>.[cite: 5]
+            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed font-semibold px-1">
+              We have sent a secure password recovery link to <span className="text-[#FF9F00] font-bold break-all">{email}</span>.
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => setIsSubmitted(false)}
-            className="w-full text-center text-xs text-[#FF9F00] font-bold hover:text-amber-400 hover:underline bg-transparent border-none outline-none pt-4 cursor-pointer transition-colors"
+            className="w-full text-center text-xs text-[#FF9F00] font-bold hover:text-amber-400 hover:underline bg-transparent border-none outline-none pt-4 cursor-pointer transition-colors min-h-[44px]"
           >
             Resend Email Link
           </button>
@@ -148,7 +148,7 @@ const ForgotPassword = () => {
           </div>
         </motion.div>
       )}
-    </>
+    </div>
   );
 };
 

@@ -29,11 +29,21 @@
   }
 }
 
-/* Base structural setups */
-/* Base structural setups */
+/* --- STEP 1 IMPLEMENTATION: STRICT RESPONSIVE OVERFLOW BOUNDARIES --- */
 html, body {
-  overflow-x: hidden;
-  width: 100%;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative;
 }
 
 body {
@@ -42,9 +52,6 @@ body {
   transition: background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
 }
 
-#root {
-  overflow-x: hidden;
-}
 /* Custom Hardware-Accelerated Premium Cinematic Micro-Animations */
 @keyframes kenBurnsLoop {
   0% { transform: scale(1) translate(0, 0); }
