@@ -45,46 +45,46 @@ export default function MovieListing() {
     : allMovies.filter((m) => Array.isArray(m.genre) && m.genre.includes(selectedGenre));
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 md:space-y-10 px-1 sm:px-0">
       
-      {/* OTT Cinematic Headline Intro Banner */}
-      <div className={`relative rounded-3xl overflow-hidden border p-8 md:p-12 transition-all duration-300 ${
+      {/* OTT Cinematic Headline Intro Banner — Added padding scales relative to viewports */}
+      <div className={`relative rounded-2xl sm:rounded-3xl overflow-hidden border p-5 sm:p-8 md:p-12 transition-all duration-300 ${
         isDarkMode 
           ? "bg-gradient-to-r from-slate-950 via-slate-900/60 to-transparent border-white/[0.04]" 
           : "bg-gradient-to-r from-slate-100 via-slate-50 to-transparent border-slate-200"
       }`}>
         <div className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-10 pointer-events-none" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop')` }} />
-        <div className="max-w-xl space-y-4 relative z-10">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-crimson/10 text-crimson text-[10px] font-black tracking-widest uppercase rounded-lg border border-crimson/20 w-fit">
-            <Flame size={12} /> Live Box Office Catalog
+        <div className="max-w-xl space-y-3 sm:space-y-4 relative z-10">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-crimson/10 text-crimson text-[9px] sm:text-[10px] font-black tracking-widest uppercase rounded-lg border border-crimson/20 w-fit">
+            <Flame size={11} /> Live Box Office Catalog
           </div>
-          <h1 className={`text-4xl md:text-5xl font-black tracking-tight leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <h1 className={`text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             {searchQuery ? (
               <>Results for <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300">"{searchQuery}"</span></>
             ) : (
-              <>Discover Your Next<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300">Cinematic Tour</span></>
+              <>Discover Your Next<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-300 block sm:inline sm:ml-2">Cinematic Tour</span></>
             )}
           </h1>
-          <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+          <p className={`text-[11px] sm:text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
             Reserve active multiplex seats instantly. Access high-resolution theater grids across all premium formats including IMAX, Dolby Atmos, and 4K Spatial Sound clusters.
           </p>
         </div>
       </div>
 
-      {/* Chips Filter Matrix */}
-      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6 transition-colors duration-300 ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Chips Filter Matrix — Optimized grid columns toggle with responsive scroll behaviors */}
+      <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4 sm:pb-6 transition-colors duration-300 ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
+        <div className="w-full md:w-auto overflow-x-auto no-scrollbar pb-1.5 md:pb-0 flex items-center gap-2">
          {visibleGenres.map((genre) => (
             <button
-                key={genre}
+              key={genre}
               onClick={() => {
-                 if (genre === 'All' && searchQuery) {
-                navigate('/movies');
+                if (genre === 'All' && searchQuery) {
+                  navigate('/movies');
                 } else {
-             setSelectedGenre(genre);
-      }
-    }}
-              className={`px-4 py-2 text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer ${
+                  setSelectedGenre(genre);
+                }
+              }}
+              className={`px-3.5 py-2 text-[11px] sm:text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer shrink-0 ${
                 selectedGenre === genre
                   ? "bg-gold text-slate-950 border-transparent shadow-[0_4px_15px_rgba(244,197,66,0.25)]"
                   : isDarkMode
@@ -98,7 +98,7 @@ export default function MovieListing() {
           {genres.length > 9 && (
             <button
               onClick={() => setShowAllGenres((prev) => !prev)}
-              className={`px-4 py-2 text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer ${
+              className={`px-3.5 py-2 text-[11px] sm:text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer shrink-0 ${
                 isDarkMode
                   ? "bg-white/[0.02] text-gold border-white/[0.05] hover:border-white/20"
                   : "bg-slate-100 text-amber-600 border-slate-200 hover:border-slate-400"
@@ -108,29 +108,29 @@ export default function MovieListing() {
             </button>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-500 font-mono">
-          <LayoutGrid size={14} className="text-gold" />
+        <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-slate-500 font-mono shrink-0">
+          <LayoutGrid size={13} className="text-gold" />
           <span>Showing {filteredMovies.length} Active Nodes</span>
         </div>
       </div>
 
-      {/* Grid Canvas */}
+      {/* Grid Canvas — Upgraded to strict grid-cols-2 on mobile devices and keeping original configurations on desktop */}
       <div>
-        <div className="flex items-center gap-2 mb-6">
-          <Sparkles size={16} className="text-gold" />
-          <h2 className={`text-xl font-black tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+        <div className="flex items-center gap-2 mb-4 sm:mb-6">
+          <Sparkles size={15} className="text-gold" />
+          <h2 className={`text-base sm:text-xl font-black tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             {searchQuery ? 'Search Results' : 'Curated Showtimes Right Now'}
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
           {loading ? (
-            Array.from({ length: 3 }).map((_, idx) => (
+            Array.from({ length: 4 }).map((_, idx) => (
               <MovieCardSkeleton key={idx} />
             ))
           ) : filteredMovies.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-              <SearchX size={40} className="text-slate-400 mb-3" />
+              <SearchX size={36} className="text-slate-400 mb-3" />
               <p className={`text-sm font-bold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
                 No movies found{searchQuery ? ` for "${searchQuery}"` : ''}
               </p>
