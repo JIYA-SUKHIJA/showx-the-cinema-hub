@@ -1,5 +1,6 @@
 // src/pages/Profile.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useBooking } from '../context/BookingContext';
@@ -334,10 +335,10 @@ export default function Profile() {
                   <button
                     key={tab.id}
                     onClick={() => { setActiveTab(tab.id); setIsEditing(false); }}
-                    className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-[11px] sm:text-xs font-bold tracking-wide transition-all duration-200 text-left bg-transparent border-none outline-none cursor-pointer group whitespace-nowrap shrink-0 lg:w-full min-h-[44px] sm:min-h-[40px] focus:outline-none ${
+                    className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-[11px] sm:text-xs font-bold tracking-wide transition-all duration-200 text-left border-none outline-none cursor-pointer group whitespace-nowrap shrink-0 lg:w-full min-h-[44px] sm:min-h-[40px] focus:outline-none ${
                       active 
                         ? "bg-amber-500 text-stone-950 font-black shadow-md" 
-                        : isDarkMode ? "text-slate-400 hover:text-white hover:bg-white/5" : "text-slate-600 hover:bg-stone-50 hover:text-slate-900"
+                        : isDarkMode ? "bg-transparent text-slate-400 hover:text-white hover:bg-white/5" : "bg-transparent text-slate-600 hover:bg-stone-50 hover:text-slate-900"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
@@ -555,9 +556,9 @@ export default function Profile() {
 
       </div>
 
-      {ticketBooking && (
+      {ticketBooking && createPortal(
         <div
-          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn"
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn"
           onClick={handleCloseTicket}
         >
           <div
@@ -584,7 +585,8 @@ export default function Profile() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

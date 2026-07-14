@@ -86,7 +86,7 @@ export default function MovieListing() {
               }}
               className={`px-3.5 py-2 text-[11px] sm:text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer shrink-0 ${
                 selectedGenre === genre
-                  ? "bg-gold text-slate-950 border-transparent shadow-[0_4px_15px_rgba(244,197,66,0.25)]"
+                  ? "bg-amber-500 text-slate-950 border-transparent shadow-[0_4px_15px_rgba(244,197,66,0.25)]"
                   : isDarkMode
                     ? "bg-white/[0.02] text-slate-400 border-white/[0.05] hover:border-white/20 hover:text-white"
                     : "bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900"
@@ -100,7 +100,7 @@ export default function MovieListing() {
               onClick={() => setShowAllGenres((prev) => !prev)}
               className={`px-3.5 py-2 text-[11px] sm:text-xs font-black rounded-xl transition-all duration-300 border cursor-pointer shrink-0 ${
                 isDarkMode
-                  ? "bg-white/[0.02] text-gold border-white/[0.05] hover:border-white/20"
+                  ? "bg-white/[0.02] text-amber-500 border-white/[0.05] hover:border-white/20"
                   : "bg-slate-100 text-amber-600 border-slate-200 hover:border-slate-400"
               }`}
             >
@@ -109,7 +109,7 @@ export default function MovieListing() {
           )}
         </div>
         <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-slate-500 font-mono shrink-0">
-          <LayoutGrid size={13} className="text-gold" />
+          <LayoutGrid size={13} className="text-amber-500" />
           <span>Showing {filteredMovies.length} Active Nodes</span>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function MovieListing() {
       {/* Grid Canvas — Upgraded to strict grid-cols-2 on mobile devices and keeping original configurations on desktop */}
       <div>
         <div className="flex items-center gap-2 mb-4 sm:mb-6">
-          <Sparkles size={15} className="text-gold" />
+          <Sparkles size={15} className="text-amber-500" />
           <h2 className={`text-base sm:text-xl font-black tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             {searchQuery ? 'Search Results' : 'Curated Showtimes Right Now'}
           </h2>

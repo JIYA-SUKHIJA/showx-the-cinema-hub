@@ -85,7 +85,7 @@ export default function Theatres() {
           /* Stacking orientation updated to support extreme 320px width thresholds */
           <div className="space-y-3">
             {shows.map((s) => (
-              <div key={s._id} className={`flex flex-col xs:flex-row xs:items-center justify-between p-4 rounded-xl border gap-4.5 ${isDarkMode ? "bg-slate-900/40 border-white/[0.06]" : "bg-white border-slate-200"}`}>
+              <div key={s._id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4.5 ${isDarkMode ? "bg-slate-900/40 border-white/[0.06]" : "bg-white border-slate-200"}`}>
                 <div className="flex items-center gap-3 min-w-0">
                   <Clapperboard size={18} className="text-amber-500 shrink-0" />
                   <div className="min-w-0 flex-grow">
@@ -95,7 +95,7 @@ export default function Theatres() {
                 </div>
                 <button
                   onClick={() => navigate(`/booking/${s.movie?._id}/shows`)}
-                  className="w-full xs:w-auto px-4 py-2.5 bg-amber-500 text-stone-950 text-xs font-black rounded-lg border-none cursor-pointer text-center select-none shrink-0 min-h-[38px] uppercase tracking-wide"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-amber-500 text-stone-950 text-xs font-black rounded-lg border-none cursor-pointer text-center select-none shrink-0 min-h-[38px] uppercase tracking-wide"
                 >
                   Book Show
                 </button>
@@ -196,7 +196,7 @@ export default function Theatres() {
           ) : (
             <div className="space-y-3">
               {shows.map((s) => (
-                <div key={s._id} className={`flex flex-col xs:flex-row xs:items-center justify-between p-4 rounded-xl border gap-4.5 ${isDarkMode ? "bg-slate-900/40 border-white/[0.06]" : "bg-white border-slate-200"}`}>
+                <div key={s._id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4.5 ${isDarkMode ? "bg-slate-900/40 border-white/[0.06]" : "bg-white border-slate-200"}`}>
                   <div className="flex items-center gap-3 min-w-0">
                     <Clapperboard size={18} className="text-amber-500 shrink-0" />
                     <div className="min-w-0 flex-grow">
@@ -206,7 +206,7 @@ export default function Theatres() {
                   </div>
                   <button
                     onClick={() => navigate(`/booking/${s.movie?._id}/shows`)}
-                    className="w-full xs:w-auto px-4 py-2.5 bg-amber-500 text-stone-950 text-xs font-black rounded-lg border-none cursor-pointer text-center select-none shrink-0 min-h-[38px] uppercase tracking-wide"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-amber-500 text-stone-950 text-xs font-black rounded-lg border-none cursor-pointer text-center select-none shrink-0 min-h-[38px] uppercase tracking-wide"
                   >
                     Book Show
                   </button>

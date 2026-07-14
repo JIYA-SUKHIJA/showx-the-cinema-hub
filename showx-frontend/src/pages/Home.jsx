@@ -8,6 +8,7 @@ import { fetchItemsByType } from '../services/api';
 import axiosInstance from '../services/axiosInstance';
 import MovieCard from '../components/molecules/MovieCard';
 import { HomeHeroSkeleton, MovieCardSkeleton } from '../components/atoms/Skeletons';
+import { optimizeImage } from '../utils/optimizeImage';
 
 const THEATRE_BG_IMAGES = [
   "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop",
@@ -100,7 +101,7 @@ export default function Home() {
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
               <img 
-                src={carouselBanners[currentSlide].image} 
+                src={optimizeImage(carouselBanners[currentSlide].image, 1200)} 
                 alt={carouselBanners[currentSlide].title}
                 style={{ objectPosition: `center ${carouselBanners[currentSlide].heroFocusY}` }}
                 className="w-full h-full object-cover select-none animate-ken-burns"

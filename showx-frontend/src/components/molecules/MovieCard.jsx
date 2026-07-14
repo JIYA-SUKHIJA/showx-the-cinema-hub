@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Star, Clapperboard, MapPin, Tv, Sparkles, Info, Heart } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { optimizeImage } from '../../utils/optimizeImage';
 
 export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
   const [imgError, setImgError] = useState(false);
@@ -88,7 +89,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
             initial={{ opacity: 0, filter: "blur(4px)" }}
             animate={{ opacity: 1, filter: "blur(0px)" }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            src={posterUrl}
+            src={optimizeImage(posterUrl)}
             alt={itemTitle}
             onError={() => setImgError(true)}
             loading="lazy"

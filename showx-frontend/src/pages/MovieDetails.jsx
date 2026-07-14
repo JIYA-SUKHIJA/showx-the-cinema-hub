@@ -6,6 +6,7 @@ import { Star, Clock, Calendar, MapPin, Film, Share2, Heart, Award, ShieldCheck,
 import { useTheme } from '../context/ThemeContext';
 import { fetchItemById, fetchShowsForMovie } from '../services/api';
 import { MovieDetailsSkeleton } from '../components/atoms/Skeletons';
+import { optimizeImage } from '../utils/optimizeImage';
 
 export default function MovieDetails() {
   const { movieId, streamId, eventId, playId } = useParams();
@@ -68,7 +69,7 @@ export default function MovieDetails() {
       {/* --- LUMINOUS HERO BANNER (single background, content floats directly on it) --- */}
       <div className="relative w-full h-[480px] sm:h-[520px] rounded-[32px] overflow-hidden bg-slate-100 shadow-[0_20px_60px_-15px_rgba(59,130,246,0.25)]">
         <div className="absolute inset-0 z-0">
-          <img src={posterUrl} alt="" className="w-full h-full object-cover object-center scale-105 brightness-110 saturate-[1.05]" />
+        <img src={optimizeImage(posterUrl, 1200)} alt="" className="w-full h-full object-cover object-center scale-105 brightness-110 saturate-[1.05]" />
         </div>
         {/* single light transparent overlay for a bright, airy hero */}
         <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/40 to-white/5 z-10" />
@@ -101,7 +102,7 @@ export default function MovieDetails() {
               transition={{ type: "spring", stiffness: 250, damping: 18 }}
               className="w-48 sm:w-56 aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_20px_45px_-10px_rgba(0,0,0,0.3)] border-4 border-white shrink-0 bg-slate-100 translate-y-1/4"
             >
-              <img src={posterUrl} alt={itemTitle} className="w-full h-full object-cover" />
+             <img src={optimizeImage(posterUrl)} alt={itemTitle} className="w-full h-full object-cover" />
             </motion.div>
 
             <div
