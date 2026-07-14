@@ -1,17 +1,21 @@
 // src/pages/Profile.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useBooking } from '../context/BookingContext';
 import { 
   User, Mail, Phone, Shield, Ticket, 
   Camera, Check, X, Edit3, LogOut, Award, Calendar,
-  ChevronRight, ShieldCheck, Sparkles, CheckCircle2, AlertCircle, Trash2
+  ChevronRight, ShieldCheck, Sparkles, CheckCircle2, AlertCircle, Trash2,
+  Download, Eye
 } from 'lucide-react';
 import { ProfilePageSkeleton } from '../components/atoms/Skeletons';
 import { showxToast } from '../utils/toastConfig';
 import axiosInstance from '../services/axiosInstance';
 import { fetchMyBookings } from '../services/api';
+import TicketSlip from '../components/TicketSlip';
+import html2canvas from 'html2canvas-pro';
+import jsPDF from 'jspdf';
 
 const fileToDataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -46,6 +50,10 @@ export default function Profile() {
   const [editedUser, setEditedUser] = useState({ ...user });
   const [activeTab, setActiveTab] = useState('info');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const [ticketBooking, setTicketBooking] = useState(null);
+  const [downloadingTicket, setDownloadingTicket] = useState(false);
+  const ticketRef = useRef(null);
 
   useEffect(() => {
     const hours = new Date().getHours();
@@ -125,7 +133,7 @@ export default function Profile() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      showxToast.error("Please choose an image under 2MB.");
+    showxToast.adminError("Please choose an image under 2MB.");
       return;
     }
 
@@ -137,7 +145,7 @@ export default function Profile() {
       showxToast.adminSuccess("Profile photo updated successfully");
     } catch (err) {
       console.error("Avatar upload failed:", err);
-      showxToast.error("Failed to update profile photo. Please try again.");
+     showxToast.adminError("Failed to update profile photo. Please try again.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -150,7 +158,7 @@ export default function Profile() {
       await axiosInstance.put('/auth/profile', { avatar: "" });
       showxToast.adminSuccess("Profile photo removed");
     } catch (err) {
-      showxToast.error("Failed to remove profile photo.");
+    showxToast.adminError("Failed to remove profile photo.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -192,6 +200,38 @@ export default function Profile() {
     }
   };
 
+  const handleViewTicket = (booking) => {
+    setTicketBooking(booking);
+  };
+
+  const handleCloseTicket = () => {
+    setTicketBooking(null);
+  };
+
+  const handleDownloadTicket = async () => {
+    if (!ticketRef.current) return;
+    setDownloadingTicket(true);
+    try {
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 2,
+        backgroundColor: '#0f172a',
+        useCORS: true,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a5');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+      pdf.save(`ShowX-Ticket-${ticketBooking?._id?.slice(-8).toUpperCase() || 'ticket'}.pdf`);
+      showxToast.adminSuccess('Ticket downloaded successfully');
+    } catch (err) {
+      console.error('Ticket download failed:', err);
+     showxToast.adminError('Failed to download ticket. Please try again.');
+    } finally {
+      setDownloadingTicket(false);
+    }
+  };
+
   if (loading) {
     return <ProfilePageSkeleton />;
   }
@@ -202,7 +242,6 @@ export default function Profile() {
     }`}>
       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
         
-        {/* --- MAIN HEADER PROFILE HERO CARD --- */}
         <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-8 border transition-all duration-300 ${
           isDarkMode 
             ? "bg-slate-950/90 border-white/[0.04] shadow-2xl shadow-black/60" 
@@ -213,7 +252,6 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 relative z-10 w-full">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left w-full md:w-auto">
               
-              {/* Profile Photo Avatar Engine Shell */}
               <div className="relative shrink-0 select-none group pb-2 sm:pb-0">
                 <div className="relative rounded-full p-[2px] bg-gradient-to-br from-amber-500/30 to-transparent shadow-xl transition-transform duration-300 hover:scale-[1.02]">
                   {user.avatar ? (
@@ -228,14 +266,12 @@ export default function Profile() {
                     </div>
                   )}
 
-                  {/* Micro-interaction hover mask container */}
                   <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer">
                     <Camera size={14} className="text-amber-400" />
                     <span className="text-[8px] font-black uppercase text-white tracking-wider">Update</span>
                   </div>
                 </div>
                 
-                {/* Independent dynamic context actions launcher button */}
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
                   <label className="bg-amber-500 hover:bg-amber-400 p-1.5 rounded-full border border-slate-950 text-stone-950 shadow-xl transition-all duration-250 cursor-pointer flex items-center justify-center focus:outline-none h-6 w-6">
                     <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploadingPhoto} />
@@ -281,10 +317,8 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* --- DASHBOARD SPLIT CONTENT INNER MATRIX --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start w-full">
           
-          {/* Left Column Controls Deck — Removed Gold membership tier card completely */}
           <div className="lg:col-span-4 w-full">
             <div className={`rounded-xl sm:rounded-2xl border p-1 sm:p-1.5 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-hidden no-scrollbar shrink-0 gap-1 ${
               isDarkMode ? "bg-slate-900/30 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm"
@@ -317,7 +351,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Right Main Panel Workspace Form Display */}
           <div className="lg:col-span-8 w-full transition-all duration-300">
             <div className={`border shadow-2xl rounded-xl sm:rounded-2xl p-4 sm:p-8 min-h-[440px] w-full overflow-hidden ${
               isDarkMode ? "bg-slate-950/90 border-white/[0.04] shadow-black/40" : "bg-white border-slate-200"
@@ -460,9 +493,20 @@ export default function Profile() {
                               {new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} &bull; Seats: {b.seats.join(', ')}
                             </p>
                           </div>
-                          <div className="sm:text-right flex sm:flex-col justify-between sm:justify-center items-center sm:items-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-dashed border-white/5 font-mono">
-                            <span className="text-[9px] text-slate-500 tracking-wider block">ID: {b._id.slice(-8).toUpperCase()}</span>
-                            <span className="text-xs sm:text-sm font-black text-amber-500 mt-0.5">₹{b.totalAmount}</span>
+                          <div className="sm:text-right flex sm:flex-col justify-between sm:justify-center items-center sm:items-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-dashed border-white/5 font-mono gap-2">
+                            <div className="flex flex-col sm:items-end gap-0.5">
+                              <span className="text-[9px] text-slate-500 tracking-wider block">ID: {b._id.slice(-8).toUpperCase()}</span>
+                              <span className="text-xs sm:text-sm font-black text-amber-500 mt-0.5">₹{b.totalAmount}</span>
+                            </div>
+                            {b.status === 'confirmed' && (
+                              <button
+                                type="button"
+                                onClick={() => handleViewTicket(b)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 hover:text-stone-950 text-amber-500 border border-amber-500/20 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all cursor-pointer outline-none min-h-[32px] active:scale-95"
+                              >
+                                <Eye size={11} /> View Ticket
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -510,6 +554,38 @@ export default function Profile() {
         </div>
 
       </div>
+
+      {ticketBooking && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn"
+          onClick={handleCloseTicket}
+        >
+          <div
+            className="w-full max-w-md my-auto space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <TicketSlip ref={ticketRef} booking={ticketBooking} />
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleCloseTicket}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/5 rounded-xl text-xs font-black uppercase tracking-wide transition-all cursor-pointer bg-transparent outline-none min-h-[44px] active:scale-95"
+              >
+                <X size={13} /> Close
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadTicket}
+                disabled={downloadingTicket}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-xl text-xs font-black uppercase tracking-wide shadow-md transition-all cursor-pointer border-none outline-none min-h-[44px] active:scale-95 disabled:opacity-60"
+              >
+                <Download size={13} /> {downloadingTicket ? 'Preparing...' : 'Download PDF'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
