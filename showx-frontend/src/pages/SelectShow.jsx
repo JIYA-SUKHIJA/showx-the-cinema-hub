@@ -19,7 +19,9 @@ export default function SelectShow() {
     const loadShows = async () => {
       try {
         const res = await axiosInstance.get('/shows');
-        const showsForMovie = res.data.shows.filter((s) => s.movie._id === movieId);
+        const showsForMovie = res.data.shows.filter(
+          (s) => s.movie?._id === movieId && s.theatre
+        );
         setShows(showsForMovie);
       } catch (err) {
         console.error("Error loading shows:", err);
@@ -31,7 +33,7 @@ export default function SelectShow() {
   }, [movieId]);
 
   const handleTimeSelection = (show) => {
-    setSelectedCinema(show.theatre.name);
+    setSelectedCinema(show.theatre?.name || "Theatre Unavailable");
     setSelectedShowtime(show.showTime);
     setSelectedShow(show);
     navigate(`/booking/${movieId}/seats`);
@@ -95,10 +97,10 @@ export default function SelectShow() {
               }`}>
                 <div className="space-y-1">
                   <h2 className={`text-base font-display font-black tracking-tight ${isDarkMode ? "text-white" : "text-stone-800"}`}>
-                    {show.theatre.name}
+                    {show.theatre?.name || "Theatre Unavailable"}
                   </h2>
                   <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                    <MapPin size={12} className="text-amber-600 shrink-0" /> {show.theatre.location}
+                    <MapPin size={12} className="text-amber-600 shrink-0" /> {show.theatre?.location || "—"}
                   </p>
                 </div>
 
