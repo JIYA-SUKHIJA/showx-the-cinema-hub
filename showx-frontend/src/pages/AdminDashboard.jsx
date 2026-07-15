@@ -32,7 +32,7 @@ import {
   deleteShowAdmin,
   fetchAllPaymentsAdmin,
 } from '../services/adminApi';
-import { Bell, Search, UserCircle, Server, Clock, ChevronDown, Settings, LogOut, Plus, X, RefreshCw, Layers, Sun, Moon } from 'lucide-react';
+import { Bell, Search, UserCircle, Server, Clock, ChevronDown, Settings, LogOut, Plus, X, RefreshCw, Layers, Sun, Moon, Sparkles } from 'lucide-react';
 
 const EMPTY_MOVIE_FORM = {
   title: '',
@@ -464,10 +464,23 @@ export default function AdminDashboard() {
     return { ...config, data: filteredData };
   };
 
+  const localKeyframeStyles = `
+    @keyframes adminEntranceUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-admin-up {
+      animation: adminEntranceUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  `;
+
   return (
     <div className={`min-h-screen flex selection:bg-[#FF9F00]/30 selection:text-white antialiased transition-colors duration-300 w-full overflow-hidden ${
       isDarkMode ? "bg-[#060608] text-white" : "bg-[#FAFAF8] text-slate-800"
     }`}>
+      <style>{localKeyframeStyles}</style>
       <Sidebar
         isExpanded={isSidebarExpanded}
         toggleSidebar={() => setIsSidebarExpanded(!isSidebarExpanded)}
@@ -483,29 +496,34 @@ export default function AdminDashboard() {
         <header className={`h-16 sm:h-20 border-b flex items-center px-4 sm:px-10 justify-between shrink-0 backdrop-blur-xl z-30 transition-all gap-2 ${
           isDarkMode ? "bg-[#060608]/40 border-white/[0.04]" : "bg-[#FAFAF8]/60 border-stone-200/60 shadow-sm"
         }`}>
-          <div className="space-y-0.5 min-w-0">
-            <h1 className="text-[10px] font-black font-mono tracking-[0.25em] uppercase text-[#FF9F00] flex items-center gap-1.5 truncate">
-              <Layers size={11} className="shrink-0" /> <span className="truncate">{activeTab} Console Node</span>
-            </h1>
-            <p className={`text-[10px] font-medium hidden sm:block ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>
-              {timeGreeting}, Admin — System metrics running nominal.
-            </p>
+          <div className="space-y-0.5 min-w-0 flex items-center gap-3">
+            <div className="hidden lg:block relative">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 block shadow-[0_0_8px_rgba(16,185,129,0.7)] animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-[10px] font-black font-mono tracking-[0.25em] uppercase text-[#FF9F00] flex items-center gap-1.5 truncate">
+                <Layers size={11} className="shrink-0" /> <span className="truncate">{activeTab} Console Node</span>
+              </h1>
+              <p className={`text-[10px] font-bold truncate hidden sm:block ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>
+                {timeGreeting}, Admin — Telemetry streams synchronised.
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-6 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-5 shrink-0">
             <button 
               onClick={toggleTheme}
               aria-label="Toggle system layout theme alignment"
-              className={`p-2 rounded-xl border flex items-center justify-center transition-all cursor-pointer outline-none hover:scale-105 ${
+              className={`p-2.5 rounded-xl border flex items-center justify-center transition-all cursor-pointer outline-none transform active:scale-95 ${
                 isDarkMode 
                   ? "bg-[#111114]/80 border-white/[0.04] text-amber-400 hover:text-amber-300" 
                   : "bg-white border-stone-200 text-stone-700 shadow-sm hover:border-amber-500/30"
               }`}
             >
-              {isDarkMode ? <Sun size={14} strokeWidth={2.5} /> : <Moon size={14} strokeWidth={2.5} />}
+              {isDarkMode ? <Sun size={13} strokeWidth={2.5} /> : <Moon size={13} strokeWidth={2.5} />}
             </button>
 
-            <div className={`hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl border shadow-inner transition-all ${
+            <div className={`hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl border transition-all shadow-sm ${
               isDarkMode ? "bg-[#111114]/80 border-white/[0.04] focus-within:border-[#FF9F00]/40" : "bg-white border-stone-200 focus-within:border-[#FF9F00]/50"
             }`}>
               <Search size={14} className="text-slate-500" />
@@ -513,13 +531,13 @@ export default function AdminDashboard() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter index rows..."
-                className={`bg-transparent text-[11px] font-medium outline-none w-28 lg:w-36 placeholder-slate-500 font-mono ${isDarkMode ? "text-white" : "text-slate-800"}`}
+                className={`bg-transparent text-[11px] font-bold outline-none w-28 lg:w-36 placeholder-slate-500 font-mono ${isDarkMode ? "text-white" : "text-slate-800"}`}
               />
             </div>
 
             <div className="relative">
-              <button onClick={handleNotifBellClick} className="relative cursor-pointer group bg-transparent border-none p-1 focus:outline-none">
-                <Bell size={16} className="text-slate-500 group-hover:text-[#FF9F00] transition-colors" />
+              <button onClick={handleNotifBellClick} className="relative cursor-pointer group bg-transparent border-none p-1 focus:outline-none transform active:scale-95 transition-transform">
+                <Bell size={15} className="text-slate-500 group-hover:text-[#FF9F00] transition-colors" />
                 {unreadNotifCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[#FF9F00] text-black text-[8px] font-black flex items-center justify-center animate-pulse">
                     {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
@@ -534,7 +552,7 @@ export default function AdminDashboard() {
                       isDarkMode ? "bg-[#111114]/95 border-white/[0.06]" : "bg-white/95 border-stone-200"
                     }`}
                   >
-                    <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-white/[0.02] mb-1 font-mono">System Notifications Array</div>
+                    <div className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-white/[0.02] mb-1 font-mono">System Notifications Array</div>
                     {adminNotifications.length === 0 ? (
                       <p className="px-3 py-6 text-[10px] text-slate-500 text-center font-mono">No telemetry nodes logged.</p>
                     ) : (
@@ -553,9 +571,9 @@ export default function AdminDashboard() {
             </div>
 
             <div className="relative">
-              <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-1.5 cursor-pointer hover:bg-white/[0.03] px-2 py-1.5 rounded-xl border border-transparent transition-all">
-                <UserCircle size={20} className="text-[#FF9F00]" />
-                <ChevronDown size={12} className="text-slate-500 hidden sm:block" />
+              <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-1.5 cursor-pointer hover:bg-white/[0.03] px-2 py-1.5 rounded-xl border border-transparent transition-all select-none">
+                <UserCircle size={18} className="text-[#FF9F00]" />
+                <ChevronDown size={12} className="text-slate-400 hidden sm:block" />
               </div>
               <AnimatePresence>
                 {showProfileMenu && (
@@ -576,12 +594,12 @@ export default function AdminDashboard() {
         </header>
 
         {/* --- DYNAMIC RENDER ROUTE VIEW --- */}
-        <div className="flex-grow p-4 sm:p-10 overflow-y-auto no-scrollbar relative z-10">
+        <div className="flex-grow p-4 sm:p-8 lg:p-10 overflow-y-auto no-scrollbar relative z-10">
           <AnimatePresence mode="wait">
             {loading ? (
               <div className="space-y-8"><CardSkeleton /><TableSkeleton /></div>
             ) : (
-              <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-8 animate-admin-up">
                 {activeTab === 'dashboard' && (
                   <>
                     <StatsGrid stats={stats} />
@@ -591,7 +609,9 @@ export default function AdminDashboard() {
 
                 {activeTab === 'settings' && (
                   <div className="max-w-4xl">
-                    <h2 className="text-sm font-black uppercase text-slate-500 tracking-wider font-mono mb-6">System Configuration Node</h2>
+                    <h2 className="text-xs font-black uppercase text-slate-400 tracking-widest font-mono mb-6 flex items-center gap-2">
+                      <Sparkles size={14} className="text-amber-500" /> System Configuration Node
+                    </h2>
                     <SystemSettings />
                   </div>
                 )}
@@ -599,11 +619,11 @@ export default function AdminDashboard() {
                 {['movies', 'theatres', 'shows'].includes(activeTab) && (
                   <div className="flex justify-end">
                     <motion.button 
-                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} 
+                      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} 
                       onClick={activeTab === 'movies' ? openAddMovie : activeTab === 'theatres' ? openAddTheatre : openAddShow}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest cursor-pointer border-none shadow-md shadow-[#FF9F00]/10"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF9F00] text-black text-[10px] font-black uppercase tracking-widest cursor-pointer border-none shadow-md shadow-[#FF9F00]/10 hover:brightness-105 transition-all"
                     >
-                      <Plus size={14} strokeWidth={2.5} /> Add {activeTab.slice(0, -1)}
+                      <Plus size={13} strokeWidth={2.5} /> Add {activeTab.slice(0, -1)}
                     </motion.button>
                   </div>
                 )}
@@ -626,17 +646,17 @@ export default function AdminDashboard() {
         </div>
 
         {/* --- SOLID DEEP OBSIDIAN BLACK METRICS FOOTER --- */}
-        <footer className="h-auto sm:h-16 py-2 sm:py-0 border-t border-neutral-900 flex flex-col sm:flex-row items-center gap-2 sm:gap-0 px-4 sm:px-10 justify-between bg-neutral-950 shrink-0 z-20 transition-colors duration-300">
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-8 text-[10px] font-black uppercase tracking-widest text-slate-400 font-mono">
+        <footer className="h-auto sm:h-14 py-2 sm:py-0 border-t border-neutral-900 flex flex-col sm:flex-row items-center gap-2 sm:gap-0 px-4 sm:px-10 justify-between bg-[#0b0c10] shrink-0 z-20 transition-colors duration-300">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400 font-mono">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" /> 
-              Telemetry: Nominal
+              Telemetry Status: Nominal
             </div>
-            <div className="flex items-center gap-2"><Server size={12} className="text-amber-500/80" /> Core Gateway: 24ms</div>
+            <div className="flex items-center gap-2"><Server size={12} className="text-amber-500/80" /> Core Gateway latency: 24ms</div>
             <div className="hidden md:flex items-center gap-1.5 text-slate-500"><RefreshCw size={11} /> Next Sync: {lastSyncTime}</div>
           </div>
-          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
-            <Clock size={12} /> {currentTime} | Showx Enterprise © 2026
+          <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono select-none">
+            <Clock size={12} className="text-amber-500" /> {currentTime} | Showx Enterprise © 2026
           </div>
         </footer>
       </main>
