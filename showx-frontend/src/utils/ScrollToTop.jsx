@@ -2,18 +2,25 @@
 import { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// Renders nothing — just watches the route and scrolls the window to the
-// top every time the path changes.
-//
-// useLayoutEffect (not useEffect) is important here: it runs synchronously
-// BEFORE the browser paints the new page. Using useEffect caused a visible
-// 1-second flash/blink, because the old scroll position briefly rendered
-// before jumping to the top. useLayoutEffect avoids that flash entirely.
+/**
+ * ScrollToTop - Pure high-fidelity route transition utility.
+ * Renders zero DOM elements to ensure no visual footprint.
+ * Runs synchronously BEFORE the browser paints to eliminate layout flashes entirely.
+ */
 export default function ScrollToTop() {
   const { pathname } = useLocation();
 
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
+    try {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant' // Locked to instant execution to prevent synthetic scrolling artifacts during view mounting
+      });
+    } catch (error) {
+      // Fallback architecture target safely protecting legacy browser engines
+      window.scrollTo(0, 0);
+    }
   }, [pathname]);
 
   return null;

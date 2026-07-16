@@ -43,18 +43,18 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
 
   return (
     <motion.div
-      whileHover={{ y: -6, scale: 1.015, shadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}
+      whileHover={{ y: -6, scale: 1.015 }}
       whileTap={{ scale: 0.99 }}
       transition={{ type: "spring", stiffness: 400, damping: 24 }}
-      className={`border rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between h-full relative group ${
+      className={`border rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between h-full relative group will-change-[transform,box-shadow] ${
         isDarkMode 
-          ? "bg-slate-900/40 border-white/[0.05] hover:border-amber-500/40 shadow-xl shadow-black/20" 
-          : "bg-white border-slate-200 hover:border-slate-350 shadow-md"
+          ? "bg-slate-900/30 border-white/[0.05] hover:border-amber-500/20 shadow-2xl shadow-black/40 hover:shadow-amber-500/[0.01]" 
+          : "bg-white border-stone-200/80 hover:border-amber-500/30 shadow-sm shadow-stone-100 hover:shadow-md hover:shadow-amber-500/[0.02]"
       }`}
     >
       {/* Absolute Dynamic Tag Flag */}
       {(item.tag || item.badge) && (
-        <span className="absolute top-3 left-3 z-20 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded bg-gradient-to-r from-amber-600 to-yellow-500 text-stone-950 shadow-md select-none">
+        <span className="absolute top-3 left-3 z-20 text-[8px] font-mono font-black tracking-widest uppercase px-2 py-0.5 rounded bg-gradient-to-r from-amber-500 to-amber-400 text-stone-950 shadow-md select-none border border-transparent">
           {item.tag || item.badge}
         </span>
       )}
@@ -67,23 +67,23 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
           e.stopPropagation();
           setIsWishlisted(!isWishlisted);
         }}
-        className={`absolute top-3 right-3 z-20 p-1.5 rounded-xl border backdrop-blur-md transition-all shadow-md cursor-pointer focus:outline-none ${
+        className={`absolute top-3 right-3 z-20 p-1.5 rounded-xl border backdrop-blur-md transition-all shadow-sm cursor-pointer focus:outline-none ${
           isDarkMode
-            ? "bg-slate-950/70 border-white/10 text-slate-400 hover:text-rose-500"
-            : "bg-white/80 border-slate-200 text-slate-500 hover:text-rose-500"
+            ? "bg-slate-950/70 border-white/10 text-slate-400 hover:text-rose-500 hover:bg-slate-950"
+            : "bg-white/80 border-stone-200 text-slate-500 hover:text-rose-500 hover:bg-white"
         }`}
         aria-label="Add to wishlist"
       >
         <Heart 
-          size={13} 
-          className={`transition-transform duration-200 ${
+          size={12} 
+          className={`transition-all duration-300 ${
             isWishlisted ? "fill-rose-500 stroke-rose-500 text-rose-500 scale-110" : "hover:scale-105"
           }`}
         />
       </motion.button>
 
       {/* Media Cover Layer */}
-      <div onClick={handleNavigateToBriefing} className="relative w-full aspect-[16/10] sm:aspect-[4/3] bg-slate-950 overflow-hidden cursor-pointer">
+      <div onClick={handleNavigateToBriefing} className="relative w-full aspect-[16/10] sm:aspect-[4/3] bg-slate-950 overflow-hidden cursor-pointer select-none">
         {!imgError ? (
           <motion.img
             initial={{ opacity: 0, filter: "blur(4px)" }}
@@ -93,7 +93,7 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
             alt={itemTitle}
             onError={() => setImgError(true)}
             loading="lazy"
-            className="w-full h-full object-cover scale-[1.005] group-hover:scale-105 transition-transform duration-700 cubic-bezier(0.16,1,0.3,1)"
+            className="w-full h-full object-cover scale-100 group-hover:scale-[1.04] transition-transform duration-500 ease-out object-center brightness-[0.93] group-hover:brightness-100"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-700 bg-slate-900">
@@ -102,34 +102,34 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
         )}
         
         {/* Subtle shadow gradient layer */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/10 pointer-events-none" />
         
         {/* Play Action Hover overlay masking */}
-        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-          <span className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-stone-950 shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
-            <Play size={16} className="fill-current ml-0.5" />
+        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[1px]">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-400 flex items-center justify-center text-stone-950 shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
+            <Play size={15} className="fill-current ml-0.5" />
           </span>
         </div>
 
         {/* Runtime Badge Overlay */}
         {item.duration && (
-          <span className="absolute bottom-3 left-3 text-[9px] font-bold px-1.5 py-0.5 bg-slate-950/80 backdrop-blur-sm text-slate-300 rounded border border-white/5 font-mono select-none">
+          <span className="absolute bottom-3 left-3 text-[8px] font-bold px-1.5 py-0.5 bg-slate-950/80 backdrop-blur-sm text-slate-300 rounded border border-white/5 font-mono select-none">
             {item.duration}
           </span>
         )}
 
         {/* Rating Badge Deck Layer */}
-        <span className="absolute bottom-3 right-3 flex items-center gap-1 text-[10px] font-black px-2 py-0.5 bg-slate-950/80 backdrop-blur-sm text-amber-500 rounded border border-white/10 shadow-md font-mono select-none">
-          <Star size={10} className="fill-amber-400 stroke-amber-400" /> {item.rating || '8.0'}
+        <span className="absolute bottom-3 right-3 flex items-center gap-1 text-[9px] font-black px-2 py-0.5 bg-slate-950/80 backdrop-blur-sm text-amber-500 rounded border border-white/10 shadow-md font-mono select-none">
+          <Star size={9} className="fill-amber-400 stroke-amber-400 animate-pulse" /> {item.rating || '8.0'}
         </span>
       </div>
 
       {/* Card Body Info Matrix */}
-      <div className="p-3 sm:p-4 flex-grow flex flex-col justify-between">
+      <div className="p-3.5 sm:p-4 flex-grow flex flex-col justify-between">
         <div onClick={handleNavigateToBriefing} className="cursor-pointer group/title space-y-2">
-          <h3 className={`text-sm md:text-base font-black tracking-tight group-hover/title:text-amber-500 transition-colors line-clamp-1 relative pb-0.5 ${isDarkMode ? "text-white" : "text-slate-800"}`}>
+          <h3 className={`text-sm md:text-base font-black tracking-tight group-hover/title:text-amber-500 transition-colors duration-200 line-clamp-1 relative pb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             {itemTitle}
-            <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500/30 transition-all duration-300 group-hover/title:w-full" />
+            <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500/30 transition-all duration-300 group-hover/title:w-1/4" />
           </h3>
           
           {/* Genre Chips Cluster */}
@@ -138,35 +138,35 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
               <span 
                 key={i} 
                 className={`text-[9px] font-bold px-2 py-0.5 rounded tracking-wide select-none ${
-                  isDarkMode ? "bg-white/5 text-slate-400" : "bg-slate-100 text-slate-600"
+                  isDarkMode ? "bg-white/5 text-slate-400" : "bg-stone-50 border border-stone-100 text-slate-600"
                 }`}
               >
                 {genre}
               </span>
             ))}
-            <span className={`text-[9px] font-bold px-2 py-0.5 rounded select-none ${
-              isDarkMode ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+            <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border select-none ${
+              isDarkMode ? "bg-amber-500/5 text-amber-400 border-amber-500/10" : "bg-stone-900 text-white border-transparent"
             }`}>
               {item.language || 'Hindi'}
             </span>
           </div>
           
           {isEventOrPlay && item.venue && (
-            <p className="text-[11px] text-slate-500 flex items-center gap-1 pt-0.5 truncate">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1 pt-0.5 truncate font-medium">
               <MapPin size={11} className="text-amber-500 shrink-0" /> {item.venue}
             </p>
           )}
 
           {/* Short description preview */}
           {item.description && (
-            <p className="text-[11px] leading-relaxed line-clamp-2 pt-0.5 text-slate-500 font-medium">
+            <p className="text-[11px] leading-relaxed line-clamp-2 pt-0.5 text-slate-400 dark:text-slate-500 font-medium font-sans">
               {item.description}
             </p>
           )}
         </div>
 
-        {/* Action Controls Footer — Maintained exact side-by-side design layout with micro-fluid padding mappings to avoid any UI deformation */}
-        <div className={`mt-4 pt-3 border-t flex items-center justify-between gap-1 xs:gap-2 ${isDarkMode ? "border-white/[0.04]" : "border-slate-100"}`}>
+        {/* Action Controls Footer — Maintained exact layout grids layout parameters mapping */}
+        <div className={`mt-4 pt-3 border-t flex items-center justify-between gap-1 xs:gap-2 ${isDarkMode ? "border-white/[0.04]" : "border-stone-100"}`}>
           
           <div className="flex flex-wrap gap-1 max-w-[45%] items-center select-none overflow-hidden shrink-0">
             {isEventOrPlay ? (
@@ -174,17 +174,17 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
                 {item.date || 'Live'}
               </span>
             ) : isStream ? (
-              <span className="text-[10px] font-mono font-extrabold text-amber-500 tracking-wide">
+              <span className="text-[10px] font-mono font-black text-amber-600 tracking-wide">
                 {item.price || 'Rent'}
               </span>
             ) : (
               formatsList.map((f, idx) => (
                 <span 
                   key={idx} 
-                  className={`px-1 py-0.5 max-[340px]:px-0.5 text-[8px] min-[360px]:text-[9px] font-bold font-mono tracking-wider rounded border uppercase whitespace-nowrap transition-all ${
+                  className={`px-1.5 py-0.5 max-[340px]:px-0.5 text-[8px] min-[360px]:text-[9px] font-black font-mono tracking-wider rounded border uppercase whitespace-nowrap transition-all ${
                     isDarkMode 
-                      ? "bg-slate-800/40 text-slate-400 border-slate-700/60" 
-                      : "bg-slate-50 text-slate-500 border-slate-200"
+                      ? "bg-slate-950 text-slate-400 border-white/[0.04] group-hover:border-amber-500/10" 
+                      : "bg-stone-50 text-stone-500 border-stone-200"
                   }`}
                 >
                   {f === '2D Standard' ? (
@@ -198,10 +198,10 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
             )}
           </div>
 
-          {/* Micro-fluid dynamic scaling padding to guarantee zero truncation on 320px screens */}
+          {/* Controls Trigger Group Elements */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0">
             <motion.button
-              whileHover={{ scale: 1.05, bg: "rgba(255,255,255,0.05)" }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -209,24 +209,25 @@ export default function MovieCard({ movie: item, onActionClick, actionLabel }) {
               }}
               className={`p-1.5 rounded-xl border transition-all cursor-pointer focus:outline-none flex items-center justify-center shrink-0 ${
                 isDarkMode 
-                  ? "border-white/10 bg-white/[0.02] text-slate-400 hover:text-amber-500" 
-                  : "border-slate-200 bg-slate-50 text-slate-600 hover:text-amber-500"
+                  ? "border-white/10 bg-white/[0.02] text-slate-400 hover:text-amber-500 hover:border-amber-500/20" 
+                  : "border-slate-200 bg-stone-50 text-slate-600 hover:text-amber-500 hover:border-stone-300"
               }`}
               title="View Briefing Summary"
             >
               <Info size={13} />
             </motion.button>
+            
             <motion.button
-              whileHover={{ scale: 1.03, filter: "brightness(1.06)" }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={(e) => {
                 e.stopPropagation();
                 onActionClick();
               }}
-              className={`px-3 max-[350px]:px-1.5 py-1.5 text-[10px] min-[360px]:text-[11px] font-black rounded-xl transition-all shadow-md cursor-pointer focus:outline-none text-center whitespace-nowrap select-none ${
+              className={`px-3 max-[350px]:px-1.5 py-1.5 text-[10px] min-[360px]:text-[11px] font-black rounded-xl transition-all shadow-sm cursor-pointer focus:outline-none text-center whitespace-nowrap select-none border-none uppercase tracking-wider min-h-[32px] ${
                 isDarkMode 
-                  ? "bg-white text-slate-950 hover:bg-amber-500 border-transparent" 
-                  : "bg-slate-900 text-white hover:bg-amber-500 hover:text-stone-950 border-transparent"
+                  ? "bg-white text-slate-950 hover:bg-amber-500" 
+                  : "bg-gradient-to-r from-stone-900 to-stone-800 text-white hover:from-amber-500 hover:to-amber-400 hover:text-stone-950"
               }`}
             >
               {finalActionLabel === 'Book Tickets' ? (
