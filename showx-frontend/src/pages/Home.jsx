@@ -16,6 +16,10 @@ const THEATRE_BG_IMAGES = [
   "https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=800&auto=format&fit=crop",
 ];
 
+// Trending movies we want prioritized at the top of the homepage carousel.
+// Titles must match exactly (case-sensitive) with what's stored in the database.
+const TRENDING_TITLES = ["Dhamaal 4", "Housefull 4", "Alpha"];
+
 const scrollRevealVariants = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } }
@@ -54,7 +58,12 @@ export default function Home() {
       fetchItemsByType('movie'),
       axiosInstance.get('/theatres')
     ]).then(([moviesData, theatresRes]) => {
-      setMovies(moviesData.slice(0, 4));
+      // Prioritize trending movies at the top of the carousel / recommended list
+      const trending = moviesData.filter((m) => TRENDING_TITLES.includes(m.title));
+      const rest = moviesData.filter((m) => !TRENDING_TITLES.includes(m.title));
+      const orderedMovies = [...trending, ...rest];
+
+      setMovies(orderedMovies.slice(0, 4));
       setTheatres(theatresRes.data.theatres.slice(0, 3));
       setTimeout(() => setLoading(false), 550);
     }).catch(err => {
