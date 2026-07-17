@@ -31,9 +31,20 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+// CORS must be registered BEFORE the rate limiter. Otherwise, once the
+// rate limit is hit, the 429 response is sent without CORS headers,
+// and the browser reports it as a confusing "CORS policy" error instead
+// of the actual "too many requests" message.
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === "development" ? 2000 : 100, // relaxed limit for local dev/testing
+  max: process.env.NODE_ENV === "development" ? 2000 : 500, // relaxed limit for demo/testing
   message: {
     success: false,
     message: "Too many requests from this IP, please try again after 15 minutes",
@@ -41,13 +52,6 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
 
 // Default express.json() body limit is only 100kb, which is too small for
 // base64-encoded profile photos (a 2MB image becomes ~2.7MB as base64 text).
