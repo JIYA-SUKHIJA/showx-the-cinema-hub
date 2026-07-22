@@ -140,8 +140,11 @@ export default function Home() {
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
               <img 
-                src={optimizeImage(carouselBanners[currentSlide].image, 1200)} 
+                src={optimizeImage(carouselBanners[currentSlide].image, { width: 1400 })} 
                 alt={carouselBanners[currentSlide].title}
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
                 style={{ objectPosition: `center ${carouselBanners[currentSlide].heroFocusY}` }}
                 className="w-full h-full object-cover select-none brightness-[0.88] animate-cinematic-burns transition-all duration-700 object-center"
               />
@@ -266,6 +269,7 @@ export default function Home() {
                   src={THEATRE_BG_IMAGES[idx % THEATRE_BG_IMAGES.length]}
                   alt={t.name}
                   loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[0.16,1,0.3,1] scale-100 group-hover:scale-[1.05] brightness-[0.85] group-hover:brightness-95 object-center"
                 />
                 <div className={`absolute inset-0 transition-opacity duration-300 group-hover:opacity-90 ${isDarkMode ? "bg-gradient-to-t from-slate-950/95 via-slate-950/65 to-transparent" : "bg-gradient-to-t from-stone-950/90 via-stone-950/55 to-transparent"}`} />

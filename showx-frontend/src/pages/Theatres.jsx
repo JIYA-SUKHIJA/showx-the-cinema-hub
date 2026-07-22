@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Building, MapPin, Clapperboard, ChevronLeft, HelpCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import axiosInstance from '../services/axiosInstance';
+import { optimizeImage } from '../utils/optimizeImage';
 
 export default function Theatres() {
   const navigate = useNavigate();
@@ -243,10 +244,11 @@ export default function Theatres() {
               <div className="w-full aspect-[16/9] bg-slate-800 overflow-hidden shrink-0 relative">
                 {t.image ? (
                   <img
-                    src={t.image}
+                    src={optimizeImage(t.image, { width: 500 })}
                     alt={t.name}
                     className="w-full h-full object-cover transform scale-100 group-hover:scale-[1.04] transition-transform duration-500 ease-out object-center brightness-[0.92] group-hover:brightness-100"
                     loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-950">

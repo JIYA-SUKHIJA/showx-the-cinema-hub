@@ -95,8 +95,11 @@ export default function MovieDetails() {
       <div className="relative w-full h-[480px] sm:h-[520px] rounded-[32px] overflow-hidden bg-slate-900 shadow-[0_25px_60px_-15px_rgba(59,130,246,0.2)] border border-white/40">
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img 
-            src={optimizeImage(posterUrl, 1200)} 
+            src={optimizeImage(posterUrl, { width: 1400 })} 
             alt="" 
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
             className="w-full h-full object-cover object-center animate-cinematic-hero brightness-[0.92] saturate-[1.08] transition-all duration-700" 
           />
         </div>
@@ -134,7 +137,13 @@ export default function MovieDetails() {
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="w-48 sm:w-56 aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] border-[4px] border-white shrink-0 bg-slate-100 translate-y-1/4 will-change-transform cursor-pointer"
             >
-              <img src={optimizeImage(posterUrl)} alt={itemTitle} className="w-full h-full object-cover scale-[1.005] hover:scale-105 transition-transform duration-500 object-center" />
+              <img
+                src={optimizeImage(posterUrl, { width: 500 })}
+                alt={itemTitle}
+                loading="eager"
+                decoding="async"
+                className="w-full h-full object-cover scale-[1.005] hover:scale-105 transition-transform duration-500 object-center"
+              />
             </motion.div>
 
             {/* SaaS Glossy Info Node Shell[cite: 11] */}
@@ -229,7 +238,7 @@ export default function MovieDetails() {
                     className="flex items-center gap-3 border border-slate-100 bg-white hover:border-amber-500/20 p-3.5 rounded-2xl shadow-sm transition-all duration-300 will-change-transform"
                   >
                     {actor.img && (
-                      <img src={actor.img} alt="" loading="lazy" className="w-12 h-12 rounded-xl object-cover shrink-0 border-2 border-slate-50 shadow-sm object-center" />
+                      <img src={actor.img} alt="" loading="lazy" decoding="async" className="w-12 h-12 rounded-xl object-cover shrink-0 border-2 border-slate-50 shadow-sm object-center" />
                     )}
                     <div className="truncate">
                       <p className="text-xs font-black truncate text-[#111827] hover:text-amber-500 transition-colors duration-200">{actor.name}</p>
