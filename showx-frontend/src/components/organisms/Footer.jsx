@@ -1,16 +1,17 @@
 // src/components/organisms/Footer.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion'; // Mapped imports to resolve the active component runtime crash
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clapperboard, Phone, Mail, ShieldCheck,
-  ArrowUp, HelpCircle, Tv, Compass, Shield, Cpu, Zap, X, Copy, Check
+  ArrowUp, HelpCircle, Tv, Compass, Shield, Cpu, Zap, X, Copy, Check, ChevronDown
 } from 'lucide-react';
 
 export default function Footer() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'privacy' | 'terms' | 'support_email' | 'support_phone' | null
   const [copied, setCopied] = useState(false);
+  const [isMobileAccordionOpen, setIsMobileAccordionOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -131,135 +132,164 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ================= STAGE 3: PRIMARY MULTI-COLUMN INTERFACE GRID ================= */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-12 md:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 w-full">
-        
-        {/* Column 1: Brand Identity */}
-        <div className="space-y-4 lg:col-span-6 col-span-1 sm:col-span-2 lg:col-span-6">
-          <div className="flex items-center gap-2.5 group w-fit select-none">
-            <div className="w-8 h-8 rounded-xl bg-[#FF9F00] flex items-center justify-center text-black shadow-md shadow-[#FF9F00]/10 transition-transform duration-500 group-hover:rotate-12">
-              <Clapperboard size={14} strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col justify-center">
-              <span className="text-sm font-black tracking-tight text-white font-display leading-none">
-                ShowX
-              </span>
-              <span className="text-[8px] font-mono font-black tracking-widest text-amber-500 uppercase mt-0.5">
-                THE CINEMAHUB
-              </span>
-            </div>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed font-medium lg:pr-6 pt-1 max-w-xl">
-            A premium movie ticketing platform offering real-time show status tracking, instant seating allocations, and immersive booking environments seamlessly.
-          </p>
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[9px] min-[360px]:text-[10px] font-mono text-slate-500/80 pt-1 select-none">
-            {["Book Movies", "Reserve Seats", "Discover Theatres", "Enjoy Cinema"].map((t) => (
-              <span key={t} className="flex items-center gap-1">&bull; {t}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* Column 2: Explore Links */}
-        <div className="space-y-3.5 col-span-1 lg:col-span-3">
-          <h5 className="text-[9px] min-[360px]:text-[10px] font-mono font-black tracking-widest uppercase text-slate-500 flex items-center gap-1.5 select-none">
-            <Zap size={10} className="text-amber-500" /> Explore
-          </h5>
-          <ul className="space-y-2.5 text-[11px] list-none p-0 font-medium">
-            {[
-              { to: "/", label: "Home Portal" },
-              { to: "/movies", label: "Movies Indexed" },
-              { to: "/theatres", label: "Theatres Map" },
-              { to: "/support", label: "Help Center" }
-            ].map((link, idx) => (
-              <li key={idx}>
-                <Link to={link.to} className="text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1 group relative w-fit focus:outline-none focus:text-amber-400">
-                  <span className="transition-transform duration-200 sm:group-hover:translate-x-1 relative pb-0.5 block">
-                    {link.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500 transition-all duration-300 sm:group-hover:w-full group-focus:w-full" />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Column 3: Support Section */}
-        <div className="space-y-3.5 col-span-1 lg:col-span-3">
-          <h5 className="text-[9px] min-[360px]:text-[10px] font-mono font-black tracking-widest uppercase text-slate-500 flex items-center gap-1.5 select-none">
-            <HelpCircle size={11} className="text-amber-500" /> Support
-          </h5>
-          <ul className="space-y-2.5 text-[11px] list-none p-0 font-medium">
-            <li>
-              <button 
-                onClick={() => setActiveModal('support_email')}
-                type="button"
-                className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
-              >
-                <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
-                  <Mail size={11} />
-                </span>
-                <span className="group-hover:text-slate-200 transition-colors truncate">support@showx.com</span>
-              </button>
-            </li>
-            <li>
-              <button 
-                onClick={() => setActiveModal('support_phone')}
-                type="button"
-                className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
-              >
-                <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
-                  <Phone size={11} />
-                </span>
-                <span className="group-hover:text-slate-200 transition-colors font-mono text-[10px] truncate">+91 XXXXX XXXXX</span>
-              </button>
-            </li>
-            <li>
-              <button 
-                onClick={() => setActiveModal('privacy')}
-                type="button"
-                className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
-              >
-                <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
-                  <ShieldCheck size={11} />
-                </span>
-                <span className="group-hover:text-amber-400 transition-colors">Privacy Policy</span>
-              </button>
-            </li>
-            <li>
-              <button 
-                onClick={() => setActiveModal('terms')}
-                type="button"
-                className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
-              >
-                <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
-                  <ShieldCheck size={11} />
-                </span>
-                <span className="group-hover:text-amber-400 transition-colors">Terms & Conditions</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-
+      {/* ================= MOBILE-ONLY ACCORDION TRIGGER (md:hidden) ================= */}
+      <div className="md:hidden border-b border-slate-900/80 bg-[#04060a]">
+        <button
+          type="button"
+          onClick={() => setIsMobileAccordionOpen(!isMobileAccordionOpen)}
+          aria-expanded={isMobileAccordionOpen}
+          aria-controls="mobile-footer-accordion-content"
+          className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#04060a] text-slate-300 font-bold text-xs hover:text-amber-400 transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-amber-500/30 cursor-pointer border-none"
+        >
+          <span>Explore ShowX</span>
+          <ChevronDown
+            size={16}
+            className={`text-amber-500 transition-transform duration-300 ease-in-out ${
+              isMobileAccordionOpen ? 'rotate-180' : 'rotate-0'
+            }`}
+          />
+        </button>
       </div>
 
-      {/* ================= STAGE 4: HIGH-FIDELITY LEGAL BASEBAR ================= */}
-      <div className="border-t bg-[#020306] border-slate-900 py-5 sm:py-6 w-full">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-mono font-medium text-slate-500 w-full">
+      {/* ================= EXPANDABLE FOOTER CONTENT CONTAINER ================= */}
+      <div
+        id="mobile-footer-accordion-content"
+        className={`transition-all duration-500 ease-in-out ${
+          isMobileAccordionOpen 
+            ? 'max-h-[2000px] opacity-100 translate-y-0 pointer-events-auto' 
+            : 'max-h-0 md:max-h-none opacity-0 md:opacity-100 -translate-y-2 md:translate-y-0 overflow-hidden md:overflow-visible pointer-events-none md:pointer-events-auto'
+        }`}
+      >
+        {/* ================= STAGE 3: PRIMARY MULTI-COLUMN INTERFACE GRID ================= */}
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-12 md:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 w-full">
           
-          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-center md:text-left select-none">
-            <p>&copy; 2026 ShowX – The CinemaHub.</p>
-            <span className="hidden sm:inline text-slate-800">|</span>
-            <p className="text-slate-600">All Rights Reserved.</p>
+          {/* Column 1: Brand Identity */}
+          <div className="space-y-4 lg:col-span-6 col-span-1 sm:col-span-2 lg:col-span-6">
+            <div className="flex items-center gap-2.5 group w-fit select-none">
+              <div className="w-8 h-8 rounded-xl bg-[#FF9F00] flex items-center justify-center text-black shadow-md shadow-[#FF9F00]/10 transition-transform duration-500 group-hover:rotate-12">
+                <Clapperboard size={14} strokeWidth={2.5} />
+              </div>
+              <div className="flex flex-col justify-center">
+                <span className="text-sm font-black tracking-tight text-white font-display leading-none">
+                  ShowX
+                </span>
+                <span className="text-[8px] font-mono font-black tracking-widest text-amber-500 uppercase mt-0.5">
+                  THE CINEMAHUB
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed font-medium lg:pr-6 pt-1 max-w-xl">
+              A premium movie ticketing platform offering real-time show status tracking, instant seating allocations, and immersive booking environments seamlessly.
+            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[9px] min-[360px]:text-[10px] font-mono text-slate-500/80 pt-1 select-none">
+              {["Book Movies", "Reserve Seats", "Discover Theatres", "Enjoy Cinema"].map((t) => (
+                <span key={t} className="flex items-center gap-1">&bull; {t}</span>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-400 select-none text-[10px]">
-            <button onClick={() => setActiveModal('privacy')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 transition-colors">Privacy</button>
-            <span className="text-slate-800">/</span>
-            <button onClick={() => setActiveModal('terms')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 transition-colors">Terms</button>
-            <span className="text-slate-800">/</span>
-            <Link to="/support" className="text-slate-500 hover:text-amber-400 transition-colors focus:outline-none">Help Center</Link>
+          {/* Column 2: Explore Links */}
+          <div className="space-y-3.5 col-span-1 lg:col-span-3">
+            <h5 className="text-[9px] min-[360px]:text-[10px] font-mono font-black tracking-widest uppercase text-slate-500 flex items-center gap-1.5 select-none">
+              <Zap size={10} className="text-amber-500" /> Explore
+            </h5>
+            <ul className="space-y-2.5 text-[11px] list-none p-0 font-medium">
+              {[
+                { to: "/", label: "Home Portal" },
+                { to: "/movies", label: "Movies Indexed" },
+                { to: "/theatres", label: "Theatres Map" },
+                { to: "/support", label: "Help Center" }
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link to={link.to} className="text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1 group relative w-fit focus:outline-none focus:text-amber-400">
+                    <span className="transition-transform duration-200 sm:group-hover:translate-x-1 relative pb-0.5 block">
+                      {link.label}
+                      <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500 transition-all duration-300 sm:group-hover:w-full group-focus:w-full" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
+          {/* Column 3: Support Section */}
+          <div className="space-y-3.5 col-span-1 lg:col-span-3">
+            <h5 className="text-[9px] min-[360px]:text-[10px] font-mono font-black tracking-widest uppercase text-slate-500 flex items-center gap-1.5 select-none">
+              <HelpCircle size={11} className="text-amber-500" /> Support
+            </h5>
+            <ul className="space-y-2.5 text-[11px] list-none p-0 font-medium">
+              <li>
+                <button 
+                  onClick={() => setActiveModal('support_email')}
+                  type="button"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                >
+                  <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
+                    <Mail size={11} />
+                  </span>
+                  <span className="group-hover:text-slate-200 transition-colors truncate">support@showx.com</span>
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => setActiveModal('support_phone')}
+                  type="button"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                >
+                  <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
+                    <Phone size={11} />
+                  </span>
+                  <span className="group-hover:text-slate-200 transition-colors font-mono text-[10px] truncate">+91 XXXXX XXXXX</span>
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => setActiveModal('privacy')}
+                  type="button"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                >
+                  <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
+                    <ShieldCheck size={11} />
+                  </span>
+                  <span className="group-hover:text-amber-400 transition-colors">Privacy Policy</span>
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => setActiveModal('terms')}
+                  type="button"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                >
+                  <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
+                    <ShieldCheck size={11} />
+                  </span>
+                  <span className="group-hover:text-amber-400 transition-colors">Terms & Conditions</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* ================= STAGE 4: HIGH-FIDELITY LEGAL BASEBAR ================= */}
+        <div className="border-t bg-[#020306] border-slate-900 py-5 sm:py-6 w-full">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-mono font-medium text-slate-500 w-full">
+            
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-center md:text-left select-none">
+              <p>&copy; 2026 ShowX – The CinemaHub.</p>
+              <span className="hidden sm:inline text-slate-800">|</span>
+              <p className="text-slate-600">All Rights Reserved.</p>
+            </div>
+
+            <div className="flex items-center gap-4 text-slate-400 select-none text-[10px]">
+              <button onClick={() => setActiveModal('privacy')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 transition-colors">Privacy</button>
+              <span className="text-slate-800">/</span>
+              <button onClick={() => setActiveModal('terms')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 transition-colors">Terms</button>
+              <span className="text-slate-800">/</span>
+              <Link to="/support" className="text-slate-500 hover:text-amber-400 transition-colors focus:outline-none">Help Center</Link>
+            </div>
+
+          </div>
         </div>
       </div>
 
