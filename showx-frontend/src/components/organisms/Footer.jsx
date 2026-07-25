@@ -45,19 +45,71 @@ export default function Footer() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Pure hardware-accelerated animations block to match Stripe/Linear smoothness
+  const handleKeyDownAccordion = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsMobileAccordionOpen((prev) => !prev);
+    }
+  };
+
+  // Pure hardware-accelerated animations block matching Stripe/Apple interaction standards
   const premiumFooterStyles = `
     @keyframes subtleShimmer {
       0% { transform: translateX(-100%); }
       100% { transform: translateX(100%); }
     }
     .animate-sweep-shimmer {
-      animation: subtleShimmer 2s infinite;
+      animation: subtleShimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes scrollPillPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .animate-pill-pulse {
+      animation: scrollPillPulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) 1;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   `;
 
+  // Stagger & reveal variants for Viewport Scroll Reveal
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.05,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 14 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
   return (
-    <footer className="relative mt-24 md:mt-32 bg-[#04060a] text-slate-400 font-sans selection:bg-amber-500 selection:text-slate-950 overflow-hidden border-t border-slate-900/80 w-full">
+    <motion.footer 
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.05 }}
+      variants={containerVariants}
+      className="relative mt-24 md:mt-32 bg-[#04060a] text-slate-400 font-sans selection:bg-amber-500 selection:text-slate-950 overflow-hidden border-t border-slate-900/80 w-full"
+    >
       <style>{premiumFooterStyles}</style>
       
       {/* BACKGROUND DECORATIVE RADIANT GLOW BULBS */}
@@ -66,20 +118,20 @@ export default function Footer() {
 
       {/* --- SCROLL TO TOP FLOATING PILL --- */}
       <div className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) ${
-        showScrollTop ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-90 pointer-events-none'
+        showScrollTop ? 'opacity-100 translate-y-0 scale-100 animate-pill-pulse' : 'opacity-0 translate-y-4 scale-90 pointer-events-none'
       }`}>
         <button
           onClick={scrollToTop}
           type="button"
           aria-label="Scroll back to top of page"
-          className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center shadow-[0_4px_20px_rgba(245,158,11,0.25)] hover:shadow-[0_8px_30px_rgba(245,158,11,0.45)] transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer border-none outline-none group"
+          className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center shadow-[0_4px_20px_rgba(245,158,11,0.25)] hover:shadow-[0_10px_32px_rgba(245,158,11,0.5)] active:scale-90 transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-amber-500/80 focus:ring-offset-2 focus:ring-offset-[#04060a] cursor-pointer border-none outline-none group"
         >
-          <ArrowUp size={16} strokeWidth={2.5} className="transition-transform duration-300 group-hover:-translate-y-0.5 group-active:scale-95" />
+          <ArrowUp size={16} strokeWidth={2.5} className="transition-transform duration-300 group-hover:-translate-y-1 group-active:scale-90" />
         </button>
       </div>
 
       {/* ================= STAGE 1: CINEMATIC CALL-TO-ACTION ELEMENT ================= */}
-      <div className="relative border-b border-slate-900/60 bg-gradient-to-b from-[#060912]/80 to-transparent w-full">
+      <motion.div variants={itemVariants} className="relative border-b border-slate-900/60 bg-gradient-to-b from-[#060912]/80 to-transparent w-full">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-10 md:py-14 text-center relative z-10">
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-20 md:w-64 md:h-24 bg-amber-500/[0.03] rounded-full blur-2xl pointer-events-none" />
           
@@ -93,17 +145,20 @@ export default function Footer() {
             Experience premium ticket reservations and explore cinematic seating arrangements flawlessly.
           </p>
           
-          <Link to="/movies" className="inline-block focus:outline-none">
-            <button type="button" className="relative px-6 py-3 text-[10px] min-[360px]:text-[11px] sm:text-xs font-black uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:brightness-105 rounded-xl shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-98 cursor-pointer border-none outline-none overflow-hidden group/btn">
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-sweep-shimmer transition-transform" />
-              Explore Movies
+          <Link to="/movies" className="inline-block focus:outline-none group/link">
+            <button 
+              type="button" 
+              className="relative px-6 py-3 text-[10px] min-[360px]:text-[11px] sm:text-xs font-black uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:brightness-110 rounded-xl shadow-[0_4px_20px_rgba(245,158,11,0.15)] hover:shadow-[0_8px_30px_rgba(245,158,11,0.35)] transition-all duration-300 cubic-bezier(0.16,1,0.3,1) hover:-translate-y-0.5 active:scale-95 cursor-pointer border-none outline-none overflow-hidden group/btn focus:ring-2 focus:ring-amber-500/80 focus:ring-offset-2 focus:ring-offset-[#04060a]"
+            >
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:animate-sweep-shimmer transition-transform" />
+              <span className="relative z-10">Explore Movies</span>
             </button>
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* ================= STAGE 2: PREMIUM HIGH-FIDELITY TRUST CARDS ================= */}
-      <div className="border-b border-slate-900/60 bg-[#04060a]/30 w-full">
+      <motion.div variants={itemVariants} className="border-b border-slate-900/60 bg-[#04060a]/30 w-full">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 md:py-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
@@ -116,13 +171,13 @@ export default function Footer() {
               return (
                 <div 
                   key={idx} 
-                  className="flex items-center gap-3 p-3.5 rounded-xl sm:rounded-2xl bg-[#090d16]/10 border border-slate-900/80 hover:border-amber-500/10 hover:bg-[#090d16]/30 transition-all duration-300 hover:-translate-y-0.5 shadow-sm group relative overflow-hidden"
+                  className="flex items-center gap-3 p-3.5 rounded-xl sm:rounded-2xl bg-[#090d16]/10 border border-slate-900/80 hover:border-amber-500/20 hover:bg-[#090d16]/40 hover:shadow-[0_8px_25px_rgba(0,0,0,0.5)] transition-all duration-300 cubic-bezier(0.16,1,0.3,1) hover:-translate-y-1 group relative overflow-hidden cursor-default"
                 >
-                  <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-amber-500/5 text-amber-500 flex items-center justify-center border border-amber-500/10 transition-all duration-300 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 shrink-0">
-                    <Icon size={13} strokeWidth={2.2} />
+                  <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-amber-500/5 text-amber-500 flex items-center justify-center border border-amber-500/10 transition-all duration-300 group-hover:bg-amber-500/15 group-hover:border-amber-500/30 group-hover:scale-105 shrink-0">
+                    <Icon size={13} strokeWidth={2.2} className="transition-transform duration-300 group-hover:scale-105" />
                   </span>
                   <div className="min-w-0">
-                    <p className="font-black text-slate-200 text-[11px] leading-tight tracking-wide transition-colors group-hover:text-amber-400 truncate">{card.label}</p>
+                    <p className="font-black text-slate-200 text-[11px] leading-tight tracking-wide transition-colors duration-200 group-hover:text-amber-400 truncate">{card.label}</p>
                     <p className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">{card.desc}</p>
                   </div>
                 </div>
@@ -130,16 +185,17 @@ export default function Footer() {
             })}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ================= MOBILE-ONLY ACCORDION TRIGGER (md:hidden) ================= */}
       <div className="md:hidden border-b border-slate-900/80 bg-[#04060a]">
         <button
           type="button"
           onClick={() => setIsMobileAccordionOpen(!isMobileAccordionOpen)}
+          onKeyDown={handleKeyDownAccordion}
           aria-expanded={isMobileAccordionOpen}
           aria-controls="mobile-footer-accordion-content"
-          className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#04060a] text-slate-300 font-bold text-xs hover:text-amber-400 transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-amber-500/30 cursor-pointer border-none"
+          className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#04060a] text-slate-300 font-bold text-xs hover:text-amber-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-inset cursor-pointer border-none"
         >
           <span>Explore ShowX</span>
           <ChevronDown
@@ -152,7 +208,8 @@ export default function Footer() {
       </div>
 
       {/* ================= EXPANDABLE FOOTER CONTENT CONTAINER ================= */}
-      <div
+      <motion.div
+        variants={itemVariants}
         id="mobile-footer-accordion-content"
         className={`transition-all duration-500 ease-in-out ${
           isMobileAccordionOpen 
@@ -165,12 +222,12 @@ export default function Footer() {
           
           {/* Column 1: Brand Identity */}
           <div className="space-y-4 lg:col-span-6 col-span-1 sm:col-span-2 lg:col-span-6">
-            <div className="flex items-center gap-2.5 group w-fit select-none">
-              <div className="w-8 h-8 rounded-xl bg-[#FF9F00] flex items-center justify-center text-black shadow-md shadow-[#FF9F00]/10 transition-transform duration-500 group-hover:rotate-12">
+            <div className="flex items-center gap-2.5 group w-fit select-none cursor-pointer">
+              <div className="w-8 h-8 rounded-xl bg-[#FF9F00] flex items-center justify-center text-black shadow-md shadow-[#FF9F00]/10 transition-all duration-500 ease-out group-hover:rotate-12 group-hover:scale-105 group-hover:shadow-[0_0_15px_rgba(255,159,0,0.4)]">
                 <Clapperboard size={14} strokeWidth={2.5} />
               </div>
               <div className="flex flex-col justify-center">
-                <span className="text-sm font-black tracking-tight text-white font-display leading-none">
+                <span className="text-sm font-black tracking-tight text-white font-display leading-none transition-colors duration-300 group-hover:text-amber-400">
                   ShowX
                 </span>
                 <span className="text-[8px] font-mono font-black tracking-widest text-amber-500 uppercase mt-0.5">
@@ -201,10 +258,10 @@ export default function Footer() {
                 { to: "/support", label: "Help Center" }
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link to={link.to} className="text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1 group relative w-fit focus:outline-none focus:text-amber-400">
-                    <span className="transition-transform duration-200 sm:group-hover:translate-x-1 relative pb-0.5 block">
+                  <Link to={link.to} className="text-slate-400 hover:text-amber-400 hover:brightness-110 transition-colors duration-200 flex items-center gap-1 group relative w-fit focus:outline-none focus:text-amber-400 rounded-sm focus:ring-1 focus:ring-amber-500/40">
+                    <span className="transition-transform duration-200 ease-out sm:group-hover:translate-x-1 relative pb-0.5 block">
                       {link.label}
-                      <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500 transition-all duration-300 sm:group-hover:w-full group-focus:w-full" />
+                      <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-amber-500 transition-all duration-300 ease-out sm:group-hover:w-full group-focus:w-full" />
                     </span>
                   </Link>
                 </li>
@@ -222,7 +279,7 @@ export default function Footer() {
                 <button 
                   onClick={() => setActiveModal('support_email')}
                   type="button"
-                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm transition-colors"
                 >
                   <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
                     <Mail size={11} />
@@ -234,7 +291,7 @@ export default function Footer() {
                 <button 
                   onClick={() => setActiveModal('support_phone')}
                   type="button"
-                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm transition-colors"
                 >
                   <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
                     <Phone size={11} />
@@ -246,7 +303,7 @@ export default function Footer() {
                 <button 
                   onClick={() => setActiveModal('privacy')}
                   type="button"
-                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm transition-colors"
                 >
                   <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
                     <ShieldCheck size={11} />
@@ -258,7 +315,7 @@ export default function Footer() {
                 <button 
                   onClick={() => setActiveModal('terms')}
                   type="button"
-                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 transition-colors"
+                  className="flex items-center gap-2.5 group bg-transparent border-none p-0 cursor-pointer text-left text-slate-400 font-medium text-[11px] outline-none w-full focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm transition-colors"
                 >
                   <span className="w-6 h-6 rounded-lg bg-[#070b14] border border-slate-900 flex items-center justify-center text-slate-500 group-hover:text-amber-500 group-hover:border-amber-500/20 transition-colors shrink-0">
                     <ShieldCheck size={11} />
@@ -282,16 +339,16 @@ export default function Footer() {
             </div>
 
             <div className="flex items-center gap-4 text-slate-400 select-none text-[10px]">
-              <button onClick={() => setActiveModal('privacy')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 transition-colors">Privacy</button>
+              <button onClick={() => setActiveModal('privacy')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm transition-colors">Privacy</button>
               <span className="text-slate-800">/</span>
-              <button onClick={() => setActiveModal('terms')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 transition-colors">Terms</button>
+              <button onClick={() => setActiveModal('terms')} type="button" className="bg-transparent border-none p-0 text-slate-500 hover:text-amber-400 cursor-pointer font-mono outline-none focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm transition-colors">Terms</button>
               <span className="text-slate-800">/</span>
-              <Link to="/support" className="text-slate-500 hover:text-amber-400 transition-colors focus:outline-none">Help Center</Link>
+              <Link to="/support" className="text-slate-500 hover:text-amber-400 transition-colors focus:outline-none focus:text-amber-400 focus:ring-1 focus:ring-amber-500/40 rounded-sm">Help Center</Link>
             </div>
 
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ================= HIGH-FIDELITY PREMIUM DYNAMIC ACCENT MODALS ================= */}
       <AnimatePresence>
@@ -320,7 +377,7 @@ export default function Footer() {
                 <button 
                   onClick={() => setActiveModal(null)}
                   type="button"
-                  className="p-1 rounded-lg bg-transparent border-none text-slate-500 hover:text-white cursor-pointer transition-colors outline-none focus:outline-none"
+                  className="p-1 rounded-lg bg-transparent border-none text-slate-500 hover:text-white cursor-pointer transition-colors outline-none focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 >
                   <X size={15} />
                 </button>
@@ -335,7 +392,7 @@ export default function Footer() {
                       <button 
                         onClick={() => handleCopyToClipboard('support@showx.com')}
                         type="button"
-                        className="bg-transparent border-none text-amber-500 hover:text-amber-400 cursor-pointer flex items-center gap-1.5 focus:outline-none shrink-0 transition-colors font-bold"
+                        className="bg-transparent border-none text-amber-500 hover:text-amber-400 cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50 shrink-0 transition-colors font-bold"
                       >
                         {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                         <span className="text-[10px] font-mono uppercase tracking-wider">{copied ? 'Copied' : 'Copy'}</span>
@@ -352,7 +409,7 @@ export default function Footer() {
                       <button 
                         onClick={() => handleCopyToClipboard('+91 98765 43210')}
                         type="button"
-                        className="bg-transparent border-none text-amber-500 hover:text-amber-400 cursor-pointer flex items-center gap-1.5 focus:outline-none shrink-0 transition-colors font-bold"
+                        className="bg-transparent border-none text-amber-500 hover:text-amber-400 cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50 shrink-0 transition-colors font-bold"
                       >
                         {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                         <span className="text-[10px] font-mono uppercase tracking-wider">{copied ? 'Copied' : 'Copy'}</span>
@@ -384,7 +441,7 @@ export default function Footer() {
                 <button 
                   onClick={() => setActiveModal(null)}
                   type="button"
-                  className="px-4 py-2 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 rounded-lg border-none hover:brightness-105 active:scale-95 cursor-pointer outline-none transition-all shadow-md focus:outline-none"
+                  className="px-4 py-2 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 rounded-lg border-none hover:brightness-105 active:scale-95 cursor-pointer outline-none transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500/80"
                 >
                   Acknowledge Protocol
                 </button>
@@ -395,6 +452,6 @@ export default function Footer() {
         )}
       </AnimatePresence>
       
-    </footer>
+    </motion.footer>
   );
 }
