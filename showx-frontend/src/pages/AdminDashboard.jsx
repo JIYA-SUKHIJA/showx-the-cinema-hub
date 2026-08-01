@@ -84,6 +84,7 @@ export default function AdminDashboard() {
 
   const [stats, setStats] = useState(null);
   const [weeklyTrend, setWeeklyTrend] = useState([]);
+  const [aiAnalytics, setAiAnalytics] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
   const [movies, setMovies] = useState([]);
@@ -146,12 +147,14 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       if (activeTab === 'dashboard') {
-        const [statsData, trendData] = await Promise.all([
+        const [statsData, trendData, aiRes] = await Promise.all([
           fetchDashboardStats().catch(() => null),
           fetchWeeklyTrend().catch(() => []),
+          axiosInstance.get('/ai/analytics').catch(() => null),
         ]);
         setStats(statsData || { totalRevenue: 0, totalBookings: 0, totalUsers: 0, activeMovies: 0 });
         setWeeklyTrend(trendData || []);
+        setAiAnalytics(aiRes?.data?.analytics || null);
       } else if (activeTab === 'bookings') {
         const data = await fetchAllBookings().catch(() => []);
         setBookings(Array.isArray(data) ? data : []);
@@ -603,6 +606,33 @@ export default function AdminDashboard() {
                 {activeTab === 'dashboard' && (
                   <>
                     <StatsGrid stats={stats} />
+
+                    {aiAnalytics && (
+                      <div>
+                        <h2 className={`text-xs font-black uppercase tracking-widest font-mono mb-4 flex items-center gap-2 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                          <Sparkles size={13} className="text-[#FF9F00]" /> AI Assistant Analytics
+                        </h2>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                          <div className={`rounded-2xl p-4 sm:p-5 border transition-colors ${isDarkMode ? "bg-[#111114] border-white/[0.05]" : "bg-white border-stone-200 shadow-sm"}`}>
+                            <p className={`text-[9px] font-black uppercase tracking-widest font-mono ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>Total Queries</p>
+                            <p className="text-xl sm:text-2xl font-black text-[#FF9F00] mt-1">{aiAnalytics.totalQueries}</p>
+                          </div>
+                          <div className={`rounded-2xl p-4 sm:p-5 border transition-colors ${isDarkMode ? "bg-[#111114] border-white/[0.05]" : "bg-white border-stone-200 shadow-sm"}`}>
+                            <p className={`text-[9px] font-black uppercase tracking-widest font-mono ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>Today's Queries</p>
+                            <p className="text-xl sm:text-2xl font-black text-[#FF9F00] mt-1">{aiAnalytics.todayQueries}</p>
+                          </div>
+                          <div className={`rounded-2xl p-4 sm:p-5 border transition-colors ${isDarkMode ? "bg-[#111114] border-white/[0.05]" : "bg-white border-stone-200 shadow-sm"}`}>
+                            <p className={`text-[9px] font-black uppercase tracking-widest font-mono ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>Active AI Users Today</p>
+                            <p className="text-xl sm:text-2xl font-black text-[#FF9F00] mt-1">{aiAnalytics.activeUsersToday}</p>
+                          </div>
+                          <div className={`rounded-2xl p-4 sm:p-5 border transition-colors ${isDarkMode ? "bg-[#111114] border-white/[0.05]" : "bg-white border-stone-200 shadow-sm"}`}>
+                            <p className={`text-[9px] font-black uppercase tracking-widest font-mono ${isDarkMode ? "text-slate-500" : "text-stone-500"}`}>Daily Limit / User</p>
+                            <p className="text-xl sm:text-2xl font-black text-[#FF9F00] mt-1">{aiAnalytics.dailyLimit}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <DashboardCharts data={weeklyTrend} />
                   </>
                 )}
