@@ -14,6 +14,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import cityRoutes from "./routes/cityRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -69,6 +70,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/cities", cityRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/ai", aiRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

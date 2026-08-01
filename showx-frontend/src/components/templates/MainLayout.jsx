@@ -6,6 +6,7 @@ import Navbar from '../organisms/Navbar';
 import Footer from '../organisms/Footer';
 import ScrollToTop from '../../utils/ScrollToTop';
 import { useTheme } from '../../context/ThemeContext';
+import AIAssistant from '../AIAssistant';
 
 export default function MainLayout() {
   const location = useLocation();
@@ -80,6 +81,8 @@ export default function MainLayout() {
       </main>
 
       <Footer />
+
+      <AIAssistant />
     </div>
   );
 }

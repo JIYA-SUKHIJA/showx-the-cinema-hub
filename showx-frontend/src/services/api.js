@@ -80,3 +80,8 @@ export const fetchLiveCollectionNode = async (endpointPath) => {
     return null;
   }
 };
+
+export const sendAIChatMessage = async (message) => {
+  const res = await axiosInstance.post('/ai/chat', { message });
+  return res.data;
+};
